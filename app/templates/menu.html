@@ -1,0 +1,16 @@
+<nav class="menu">
+  <a href="/">Inicio</a>
+
+  {% if training %}
+    <a href="/">Cambiar categoría</a>
+  {% endif %}
+
+  {% if admin %}
+    <a href="/admin">Admin</a>
+    <a href="/">Salir del admin</a>
+  {% else %}
+    <a href="/admin">Admin</a>
+  {% endif %}
+</nav>
+
+<hr>

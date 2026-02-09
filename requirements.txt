@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+sqlalchemy
+pip install jinja2
+pip install python-multipart

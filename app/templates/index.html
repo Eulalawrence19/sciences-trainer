@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Sciences Trainer</title>
+
+<style>
+  body {
+    font-family: monospace;
+    background:#0e0e0e;
+    color:#eee;
+    padding:20px;
+  }
+
+  nav a {
+    color:#4fc3f7;
+    text-decoration:none;
+    margin-right:10px;
+  }
+
+  h1 { color:#ffd54f; }
+
+  label {
+    display:block;
+    margin-top:15px;
+  }
+
+  input, select, button {
+    background:#222;
+    color:#eee;
+    border:1px solid #555;
+    font-family: monospace;
+    padding:6px;
+    margin-top:5px;
+  }
+
+  button {
+    margin-top:25px;
+    cursor:pointer;
+  }
+
+  .hint {
+    color:#aaa;
+    font-size:13px;
+    margin-top:5px;
+    display:block;
+  }
+
+  .box {
+    margin-top:20px;
+    padding:10px;
+    border:1px solid #444;
+    background:#141414;
+  }
+</style>
+</head>
+
+<body>
+
+<nav>
+  <a href="/">Inicio</a>
+  <a href="/admin">Admin</a>
+</nav>
+
+<hr>
+
+<h1>Configurar sesión</h1>
+
+<form method="post" action="/play/question">
+
+  <!-- ========================= -->
+  <!-- CATEGORÍA -->
+  <!-- ========================= -->
+  <label>Categoría</label>
+  <select id="categorySelect" required>
+    <option value="">-- Selecciona categoría --</option>
+    {% for c in categories %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+    {% endfor %}
+  </select>
+
+  <!-- ========================= -->
+  <!-- SUBCATEGORÍA -->
+  <!-- ========================= -->
+  <label>Subcategoría</label>
+  <select name="subcategory_id" id="subcategorySelect" required>
+    <option value="">-- Selecciona subcategoría --</option>
+  </select>
+
+  <!-- ========================= -->
+  <!-- TODO EL BANCO -->
+  <!-- ========================= -->
+  <label>
+    <input type="checkbox" name="all_questions" value="1">
+    Usar todo el banco de preguntas
+  </label>
+  <span class="hint">
+    Si se activa, se ignora el número de preguntas.
+  </span>
+
+  <!-- ========================= -->
+  <!-- NÚMERO DE PREGUNTAS -->
+  <!-- ========================= -->
+  <label>Número de preguntas</label>
+  <input
+    type="number"
+    name="limit"
+    min="1"
+    max="10000"
+    value="20"
+  >
+
+  <!-- ========================= -->
+  <!-- TIEMPO -->
+  <!-- ========================= -->
+  <label>Tiempo total (minutos)</label>
+  <input
+    type="number"
+    name="time_limit"
+    min="1"
+    max="180"
+    value="30"
+    required
+  >
+
+  <!-- ========================= -->
+  <!-- MODO -->
+  <!-- ========================= -->
+  <div class="box">
+    <strong>Modo</strong>
+
+    <label>
+      <input type="radio" name="exam" value="" checked>
+      Entrenamiento (feedback inmediato)
+    </label>
+
+    <label>
+      <input type="radio" name="exam" value="1">
+      Examen (solo resultado final)
+    </label>
+
+    <span class="hint">
+      En modo examen no se muestran correcciones ni respuestas durante la prueba.
+    </span>
+  </div>
+
+  <button>Empezar</button>
+
+</form>
+
+<!-- ========================= -->
+<!-- JS: CATEGORÍA → SUBCATEGORÍA -->
+<!-- ========================= -->
+<script>
+  const categoryData = {
+    {% for c in categories %}
+      "{{ c.id }}": [
+        {% for s in c.subcategories %}
+          { id: "{{ s.id }}", name: "{{ s.name }}" },
+        {% endfor %}
+      ],
+    {% endfor %}
+  };
+
+  const categorySelect = document.getElementById("categorySelect");
+  const subcategorySelect = document.getElementById("subcategorySelect");
+
+  categorySelect.addEventListener("change", () => {
+    const categoryId = categorySelect.value;
+
+    subcategorySelect.innerHTML =
+      '<option value="">-- Selecciona subcategoría --</option>';
+
+    if (!categoryId || !categoryData[categoryId]) return;
+
+    categoryData[categoryId].forEach(sub => {
+      const option = document.createElement("option");
+      option.value = sub.id;
+      option.textContent = sub.name;
+      subcategorySelect.appendChild(option);
+    });
+  });
+</script>
+
+</body>
+</html>

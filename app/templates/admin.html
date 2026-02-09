@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Admin</title>
+
+<nav style="margin-bottom:20px;">
+  <a href="/" style="color:#81c784;">Inicio</a> |
+  <strong>Admin</strong>
+</nav>
+<hr>
+
+<style>
+  body {
+    font-family: monospace;
+    background:#111;
+    color:#eee;
+    padding:20px;
+  }
+
+  h1 { color:#ffd54f; }
+  h2 { color:#4fc3f7; }
+  h3 { color:#81c784; }
+
+  form { margin-bottom:15px; }
+
+  input, textarea, select, button {
+    background:#222;
+    color:#eee;
+    border:1px solid #555;
+    font-family: monospace;
+    padding:5px;
+  }
+
+  textarea {
+    width:100%;
+    height:90px;
+  }
+
+  button {
+    cursor:pointer;
+  }
+
+  .box {
+    border:1px solid #333;
+    padding:10px;
+    margin-bottom:15px;
+  }
+
+  .danger {
+    color:#f44336;
+  }
+
+  .inline {
+    display:inline;
+  }
+
+  .question {
+    margin-left:20px;
+    font-size:14px;
+    color:#ccc;
+  }
+</style>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+
+<h1>ADMIN</h1>
+
+<!-- ========================= -->
+<!-- CREAR CATEGORÍA -->
+<!-- ========================= -->
+<h2>Crear categoría</h2>
+<form method="post" action="/admin/category">
+  <input name="name" placeholder="Nombre categoría" required>
+  <button>Crear</button>
+</form>
+
+<!-- ========================= -->
+<!-- CREAR SUBCATEGORÍA -->
+<!-- ========================= -->
+<h2>Crear subcategoría</h2>
+<form method="post" action="/admin/subcategory">
+  <select name="category_id" required>
+    {% for c in categories %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+    {% endfor %}
+  </select>
+  <input name="name" placeholder="Nombre subcategoría" required>
+  <button>Crear</button>
+</form>
+
+<!-- ========================= -->
+<!-- CREAR PREGUNTA -->
+<!-- ========================= -->
+<h2>Crear pregunta</h2>
+<form method="post" action="/admin/question">
+  <select name="subcategory_id" required>
+    {% for c in categories %}
+      {% for s in c.subcategories %}
+        <option value="{{ s.id }}">{{ c.name }} / {{ s.name }}</option>
+      {% endfor %}
+    {% endfor %}
+  </select>
+
+  <p>Enunciado (LaTeX permitido):</p>
+  <textarea id="statement" name="statement"></textarea>
+
+  <p>Preview:</p>
+  <div id="preview"></div>
+
+  <p>Respuesta correcta:</p>
+  <input name="answer" required>
+
+  <button>Guardar</button>
+</form>
+
+<hr>
+
+<!-- ========================= -->
+<!-- CONTENIDO EXISTENTE -->
+<!-- ========================= -->
+<h2>Contenido actual</h2>
+
+{% for c in categories %}
+  <div class="box">
+    <h3>
+      {{ c.name }}
+      <form method="post" action="/admin/category/delete" class="inline">
+        <input type="hidden" name="category_id" value="{{ c.id }}">
+        <button class="danger"
+          onclick="return confirm('¿Eliminar categoría completa?')">
+          Eliminar
+        </button>
+      </form>
+    </h3>
+
+    {% for s in c.subcategories %}
+      <div class="box">
+        <strong>
+          {{ s.name }}
+          <form method="post" action="/admin/subcategory/delete" class="inline">
+            <input type="hidden" name="subcategory_id" value="{{ s.id }}">
+            <button class="danger"
+              onclick="return confirm('¿Eliminar subcategoría?')">
+              Eliminar
+            </button>
+          </form>
+        </strong>
+
+        {% if s.questions and s.questions|length > 0 %}
+          <ul>
+            {% for q in s.questions %}
+              <li class="question">
+                {{ q.statement[:80] }}{% if q.statement|length > 80 %}...{% endif %}
+                <form method="post" action="/admin/question/delete" class="inline">
+                  <input type="hidden" name="question_id" value="{{ q.id }}">
+                  <button class="danger"
+                    onclick="return confirm('¿Eliminar pregunta?')">
+                    X
+                  </button>
+                </form>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="question">Sin preguntas</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endfor %}
+
+<script>
+const input = document.getElementById("statement");
+const preview = document.getElementById("preview");
+
+if (input) {
+  input.addEventListener("input", () => {
+    preview.textContent = input.value;
+    if (window.MathJax) {
+      MathJax.typesetPromise([preview]);
+    }
+  });
+}
+</script>
+
+</body>
+</html>
