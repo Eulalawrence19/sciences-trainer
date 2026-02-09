@@ -2,55 +2,125 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sciences Trainer</title>
 
 <style>
+  /* =========================
+     BASE
+     ========================= */
+
+  * {
+    box-sizing: border-box;
+  }
+
   body {
     font-family: monospace;
-    background:#0e0e0e;
-    color:#eee;
-    padding:20px;
+    background: #0e0e0e;
+    color: #eee;
+    padding: 16px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    color: #ffd54f;
+    font-size: 22px;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #333;
+    margin: 16px 0;
+  }
+
+  /* =========================
+     NAV
+     ========================= */
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 8px;
   }
 
   nav a {
-    color:#4fc3f7;
-    text-decoration:none;
-    margin-right:10px;
+    color: #4fc3f7;
+    text-decoration: none;
+    font-size: 15px;
   }
 
-  h1 { color:#ffd54f; }
+  /* =========================
+     FORM ELEMENTS
+     ========================= */
 
   label {
-    display:block;
-    margin-top:15px;
+    display: block;
+    margin-top: 20px;
   }
 
-  input, select, button {
-    background:#222;
-    color:#eee;
-    border:1px solid #555;
+  input,
+  select,
+  button {
+    width: 100%;
+    background: #222;
+    color: #eee;
+    border: 1px solid #555;
     font-family: monospace;
-    padding:6px;
-    margin-top:5px;
+    padding: 10px;
+    margin-top: 6px;
+    font-size: 16px; /* evita zoom en móvil */
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: auto;
+    transform: scale(1.2);
+    margin-right: 6px;
   }
 
   button {
-    margin-top:25px;
-    cursor:pointer;
+    margin-top: 25px;
+    cursor: pointer;
+    font-size: 17px;
+    padding: 12px;
   }
 
+  /* =========================
+     HELPERS
+     ========================= */
+
   .hint {
-    color:#aaa;
-    font-size:13px;
-    margin-top:5px;
-    display:block;
+    color: #aaa;
+    font-size: 13px;
+    margin-top: 6px;
+    display: block;
   }
 
   .box {
-    margin-top:20px;
-    padding:10px;
-    border:1px solid #444;
-    background:#141414;
+    margin-top: 20px;
+    padding: 12px;
+    border: 1px solid #444;
+    background: #141414;
+  }
+
+  /* =========================
+     MOBILE REFINEMENT
+     ========================= */
+
+  @media (max-width: 480px) {
+    body {
+      padding: 12px;
+    }
+
+    h1 {
+      font-size: 20px;
+    }
+
+    .box {
+      padding: 12px;
+    }
   }
 </style>
 </head>
