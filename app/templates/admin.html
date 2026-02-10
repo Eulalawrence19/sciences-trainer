@@ -4,194 +4,316 @@
 <meta charset="UTF-8">
 <title>Admin</title>
 
-<nav style="margin-bottom:20px;">
-  <a href="/" style="color:#81c784;">Inicio</a> |
-  <strong>Admin</strong>
-</nav>
-<hr>
-
 <style>
-  body {
-    font-family: monospace;
-    background:#111;
-    color:#eee;
-    padding:20px;
-  }
+body {
+  font-family: monospace;
+  background:#111;
+  color:#eee;
+  padding:16px;
+}
 
-  h1 { color:#ffd54f; }
-  h2 { color:#4fc3f7; }
-  h3 { color:#81c784; }
+nav { margin-bottom:12px; }
+nav a { color:#81c784; text-decoration:none; }
 
-  form { margin-bottom:15px; }
+h1 { color:#ffd54f; margin-bottom:10px; }
+h2 { color:#4fc3f7; margin:14px 0 6px; }
 
-  input, textarea, select, button {
-    background:#222;
-    color:#eee;
-    border:1px solid #555;
-    font-family: monospace;
-    padding:5px;
-  }
+input, textarea, select, button {
+  background:#222;
+  color:#eee;
+  border:1px solid #555;
+  font-family: monospace;
+  padding:4px 6px;
+  font-size:14px;
+}
 
-  textarea {
-    width:100%;
-    height:90px;
-  }
+select, input { height:28px; }
+textarea { width:100%; height:60px; }
 
-  button {
-    cursor:pointer;
-  }
+button { cursor:pointer; white-space:nowrap; }
 
-  .box {
-    border:1px solid #333;
-    padding:10px;
-    margin-bottom:15px;
-  }
+.row {
+  display:flex;
+  gap:6px;
+  align-items:center;
+  margin-bottom:6px;
+}
 
-  .danger {
-    color:#f44336;
-  }
+.row > * { flex:1; }
+.row button { flex:0; }
 
-  .inline {
-    display:inline;
-  }
+.box {
+  border:1px solid #333;
+  padding:10px;
+  margin-bottom:12px;
+}
 
-  .question {
-    margin-left:20px;
-    font-size:14px;
-    color:#ccc;
-  }
+.danger { color:#f44336; }
+.small { font-size:13px; color:#aaa; }
 </style>
-
-<script>
-  window.MathJax = {
-    tex: {
-      inlineMath: [['$', '$'], ['\\(', '\\)']],
-      displayMath: [['$$', '$$'], ['\\[', '\\]']]
-    }
-  };
-</script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body>
 
+<nav>
+  <a href="/">Inicio</a> | <strong>Admin</strong>
+</nav>
+<hr>
+
 <h1>ADMIN</h1>
 
-<!-- ========================= -->
-<!-- CREAR CATEGORÍA -->
-<!-- ========================= -->
-<h2>Crear categoría</h2>
+<!-- ================================================= -->
+<!-- CREAR -->
+<!-- ================================================= -->
+<h2>Crear</h2>
+
 <form method="post" action="/admin/category">
-  <input name="name" placeholder="Nombre categoría" required>
-  <button>Crear</button>
+  <div class="row">
+    <input name="name" placeholder="Nueva categoría" required>
+    <button>Crear</button>
+  </div>
 </form>
 
-<!-- ========================= -->
-<!-- CREAR SUBCATEGORÍA -->
-<!-- ========================= -->
-<h2>Crear subcategoría</h2>
 <form method="post" action="/admin/subcategory">
-  <select name="category_id" required>
-    {% for c in categories %}
-      <option value="{{ c.id }}">{{ c.name }}</option>
-    {% endfor %}
-  </select>
-  <input name="name" placeholder="Nombre subcategoría" required>
-  <button>Crear</button>
+  <div class="row">
+    <select name="category_id" required>
+      {% for c in categories %}
+        <option value="{{ c.id }}">{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <input name="name" placeholder="Nueva subcategoría" required>
+    <button>Crear</button>
+  </div>
 </form>
 
-<!-- ========================= -->
-<!-- CREAR PREGUNTA -->
-<!-- ========================= -->
-<h2>Crear pregunta</h2>
 <form method="post" action="/admin/question">
-  <select name="subcategory_id" required>
-    {% for c in categories %}
-      {% for s in c.subcategories %}
-        <option value="{{ s.id }}">{{ c.name }} / {{ s.name }}</option>
+  <div class="row">
+    <select id="c_create">
+      <option value="">Categoría</option>
+      {% for c in categories %}
+        <option value="{{ c.id }}">{{ c.name }}</option>
       {% endfor %}
-    {% endfor %}
-  </select>
+    </select>
 
-  <p>Enunciado (LaTeX permitido):</p>
-  <textarea id="statement" name="statement"></textarea>
+    <select name="subcategory_id" id="s_create" required disabled>
+      <option value="">Subcategoría</option>
+    </select>
+  </div>
 
-  <p>Preview:</p>
-  <div id="preview"></div>
+  <textarea name="statement" placeholder="Enunciado (LaTeX permitido)"></textarea>
 
-  <p>Respuesta correcta:</p>
-  <input name="answer" required>
-
-  <button>Guardar</button>
+  <div class="row">
+    <input name="answer" placeholder="Respuesta correcta" required>
+    <button>Guardar</button>
+  </div>
 </form>
 
 <hr>
 
-<!-- ========================= -->
-<!-- CONTENIDO EXISTENTE -->
-<!-- ========================= -->
-<h2>Contenido actual</h2>
+<!-- ================================================= -->
+<!-- MODIFICAR / ELIMINAR -->
+<!-- ================================================= -->
+<h2>Modificar / Eliminar</h2>
 
-{% for c in categories %}
-  <div class="box">
-    <h3>
-      {{ c.name }}
-      <form method="post" action="/admin/category/delete" class="inline">
-        <input type="hidden" name="category_id" value="{{ c.id }}">
-        <button class="danger"
-          onclick="return confirm('¿Eliminar categoría completa?')">
-          Eliminar
-        </button>
-      </form>
-    </h3>
+<div class="box">
 
-    {% for s in c.subcategories %}
-      <div class="box">
-        <strong>
-          {{ s.name }}
-          <form method="post" action="/admin/subcategory/delete" class="inline">
-            <input type="hidden" name="subcategory_id" value="{{ s.id }}">
-            <button class="danger"
-              onclick="return confirm('¿Eliminar subcategoría?')">
-              Eliminar
-            </button>
-          </form>
-        </strong>
+  <div class="row">
+    <select id="c_edit">
+      <option value="">Categoría</option>
+      {% for c in categories %}
+        <option value="{{ c.id }}">{{ c.name }}</option>
+      {% endfor %}
+    </select>
 
-        {% if s.questions and s.questions|length > 0 %}
-          <ul>
-            {% for q in s.questions %}
-              <li class="question">
-                {{ q.statement[:80] }}{% if q.statement|length > 80 %}...{% endif %}
-                <form method="post" action="/admin/question/delete" class="inline">
-                  <input type="hidden" name="question_id" value="{{ q.id }}">
-                  <button class="danger"
-                    onclick="return confirm('¿Eliminar pregunta?')">
-                    X
-                  </button>
-                </form>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <div class="question">Sin preguntas</div>
-        {% endif %}
-      </div>
-    {% endfor %}
+    <select id="s_edit" disabled>
+      <option value="">Subcategoría</option>
+    </select>
+
+    <select id="q_edit" disabled>
+      <option value="">Pregunta</option>
+    </select>
   </div>
-{% endfor %}
 
+  <div class="row">
+    <input id="edit_name" placeholder="Nuevo nombre">
+    <button onclick="submitRename()">Modificar</button>
+    <button class="danger" onclick="submitDelete()">Eliminar</button>
+  </div>
+
+  <textarea id="edit_statement" placeholder="Editar enunciado"></textarea>
+
+  <div class="row">
+    <input id="edit_answer" placeholder="Editar respuesta">
+    <button onclick="submitQuestionEdit()">Guardar cambios</button>
+  </div>
+
+  <div class="small">
+    • Categoría/Subcategoría → renombrar o eliminar<br>
+    • Pregunta → editar contenido o eliminar
+  </div>
+
+</div>
+
+<!-- ================================================= -->
+<!-- IDS OCULTOS -->
+<!-- ================================================= -->
+<input type="hidden" id="edit_category_id">
+<input type="hidden" id="edit_subcategory_id">
+<input type="hidden" id="edit_question_id">
+
+<!-- ================================================= -->
+<!-- JS -->
+<!-- ================================================= -->
 <script>
-const input = document.getElementById("statement");
-const preview = document.getElementById("preview");
-
-if (input) {
-  input.addEventListener("input", () => {
-    preview.textContent = input.value;
-    if (window.MathJax) {
-      MathJax.typesetPromise([preview]);
+const tree = {
+{% for c in categories %}
+  "{{ c.id }}": {
+    name: "{{ c.name }}",
+    subs: {
+      {% for s in c.subcategories %}
+      "{{ s.id }}": {
+        name: "{{ s.name }}",
+        questions: {
+          {% for q in s.questions %}
+          "{{ q.id }}": {
+            statement: "{{ q.statement | replace('\n',' ') }}",
+            answer: "{{ q.answer }}"
+          },
+          {% endfor %}
+        }
+      },
+      {% endfor %}
     }
+  },
+{% endfor %}
+};
+
+// ---------- CREAR ----------
+const cCreate = document.getElementById("c_create");
+const sCreate = document.getElementById("s_create");
+
+cCreate.onchange = () => {
+  sCreate.innerHTML = '<option value="">Subcategoría</option>';
+  sCreate.disabled = true;
+  if (!tree[cCreate.value]) return;
+
+  Object.entries(tree[cCreate.value].subs).forEach(([id,s])=>{
+    let o=document.createElement("option");
+    o.value=id; o.textContent=s.name;
+    sCreate.appendChild(o);
   });
+  sCreate.disabled=false;
+};
+
+// ---------- EDITAR ----------
+const cE = document.getElementById("c_edit");
+const sE = document.getElementById("s_edit");
+const qE = document.getElementById("q_edit");
+
+const nameI = document.getElementById("edit_name");
+const stI = document.getElementById("edit_statement");
+const anI = document.getElementById("edit_answer");
+
+cE.onchange = () => {
+  document.getElementById("edit_category_id").value = cE.value;
+  document.getElementById("edit_subcategory_id").value = "";
+  document.getElementById("edit_question_id").value = "";
+
+  sE.innerHTML='<option value="">Subcategoría</option>';
+  qE.innerHTML='<option value="">Pregunta</option>';
+  sE.disabled=true; qE.disabled=true;
+  nameI.value=""; stI.value=""; anI.value="";
+
+  if (!tree[cE.value]) return;
+
+  Object.entries(tree[cE.value].subs).forEach(([id,s])=>{
+    let o=document.createElement("option");
+    o.value=id; o.textContent=s.name;
+    sE.appendChild(o);
+  });
+  sE.disabled=false;
+  nameI.value = tree[cE.value].name;
+};
+
+sE.onchange = () => {
+  document.getElementById("edit_subcategory_id").value = sE.value;
+  document.getElementById("edit_question_id").value = "";
+
+  qE.innerHTML='<option value="">Pregunta</option>';
+  qE.disabled=true;
+  nameI.value=""; stI.value=""; anI.value="";
+
+  const s = tree[cE.value]?.subs[sE.value];
+  if (!s) return;
+
+  Object.entries(s.questions).forEach(([id,q])=>{
+    let o=document.createElement("option");
+    o.value=id;
+    o.textContent=q.statement.slice(0,40);
+    qE.appendChild(o);
+  });
+  qE.disabled=false;
+  nameI.value = s.name;
+};
+
+qE.onchange = () => {
+  document.getElementById("edit_question_id").value = qE.value;
+  const q = tree[cE.value].subs[sE.value].questions[qE.value];
+  stI.value = q.statement;
+  anI.value = q.answer;
+};
+
+// ---------- POST HELPERS ----------
+function post(path, data){
+  const f=document.createElement("form");
+  f.method="post"; f.action=path;
+  for (let k in data){
+    let i=document.createElement("input");
+    i.type="hidden"; i.name=k; i.value=data[k];
+    f.appendChild(i);
+  }
+  document.body.appendChild(f);
+  f.submit();
+}
+
+// ---------- ACTIONS ----------
+function submitRename(){
+  const catId = document.getElementById("edit_category_id").value;
+  const subId = document.getElementById("edit_subcategory_id").value;
+  const name  = nameI.value;
+
+  if (subId)
+    post("/admin/subcategory/update",{subcategory_id:subId,name:name});
+  else if (catId)
+    post("/admin/category/update",{category_id:catId,name:name});
+  else
+    alert("Selecciona categoría o subcategoría");
+}
+
+function submitQuestionEdit(){
+  const qId = document.getElementById("edit_question_id").value;
+  if (!qId) return alert("Selecciona una pregunta");
+
+  post("/admin/question/update",{
+    question_id:qId,
+    statement:stI.value,
+    answer:anI.value
+  });
+}
+
+function submitDelete(){
+  const qId = document.getElementById("edit_question_id").value;
+  const subId = document.getElementById("edit_subcategory_id").value;
+  const catId = document.getElementById("edit_category_id").value;
+
+  if (qId)
+    post("/admin/question/delete",{question_id:qId});
+  else if (subId)
+    post("/admin/subcategory/delete",{subcategory_id:subId});
+  else if (catId)
+    post("/admin/category/delete",{category_id:catId});
+  else
+    alert("Selecciona algo para eliminar");
 }
 </script>
 

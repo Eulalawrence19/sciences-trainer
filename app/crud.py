@@ -222,3 +222,40 @@ def get_random_questions(subcategory_id: int, limit: int | None = None):
         return query.all()
     finally:
         db.close()
+
+from app.db import SessionLocal
+from app.models import Category, Subcategory, Question
+
+
+def update_category(category_id: int, name: str):
+    db = SessionLocal()
+    try:
+        c = db.query(Category).get(category_id)
+        if c:
+            c.name = name
+            db.commit()
+    finally:
+        db.close()
+
+
+def update_subcategory(subcategory_id: int, name: str):
+    db = SessionLocal()
+    try:
+        s = db.query(Subcategory).get(subcategory_id)
+        if s:
+            s.name = name
+            db.commit()
+    finally:
+        db.close()
+
+
+def update_question(question_id: int, statement: str, answer: str):
+    db = SessionLocal()
+    try:
+        q = db.query(Question).get(question_id)
+        if q:
+            q.statement = statement
+            q.answer = answer
+            db.commit()
+    finally:
+        db.close()

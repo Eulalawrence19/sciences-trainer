@@ -3,46 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <title>Entrenamiento</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-  body {
-    font-family: monospace;
-    background:#0e0e0e;
-    color:#eee;
-    padding:20px;
+* { box-sizing:border-box; }
+
+body {
+  font-family: monospace;
+  background:#0e0e0e;
+  color:#eee;
+  padding:12px;
+  margin:0;
+}
+
+nav a {
+  color:#4fc3f7;
+  text-decoration:none;
+  margin-right:12px;
+  display:inline-block;
+  margin-bottom:6px;
+}
+
+h1, h2 { color:#ffd54f; }
+
+input, button {
+  background:#222;
+  color:#eee;
+  border:1px solid #555;
+  font-family: monospace;
+  padding:12px;
+  margin-top:10px;
+  font-size:16px;
+  width:100%;
+}
+
+::placeholder { color:#888; }
+
+button { cursor:pointer; }
+
+.box {
+  margin-top:20px;
+  padding:15px;
+  border:1px solid #333;
+  max-width:700px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.progress {
+  color:#aaa;
+  font-size:14px;
+  margin-bottom:10px;
+  font-weight:bold;
+}
+
+.ok {
+  color:#b9f6ca;
+  background:#0f2f1f;
+  border:1px solid #1b5e20;
+  padding:12px;
+  font-weight:bold;
+}
+
+.bad {
+  color:#ff8a80;
+  background:#2a0f12;
+  border:1px solid #b71c1c;
+  padding:12px;
+  font-weight:bold;
+}
+
+.bad b {
+  color:#ff5252;
+  font-size:18px;
+}
+
+@media (max-width:600px) {
+  h1 { font-size:22px; }
+  h2 { font-size:18px; }
+
+  .ok, .bad {
+    font-size:18px;
+    text-align:center;
+    border-width:2px;
   }
-
-  nav a {
-    color:#4fc3f7;
-    text-decoration:none;
-    margin-right:10px;
-  }
-
-  h1, h2 { color:#ffd54f; }
-
-  input, button {
-    background:#222;
-    color:#eee;
-    border:1px solid #555;
-    font-family: monospace;
-    padding:6px;
-    margin-top:5px;
-  }
-
-  .ok  { color:#4caf50; }
-  .bad { color:#f44336; }
-
-  .box {
-    margin-top:20px;
-    padding:15px;
-    border:1px solid #333;
-  }
-
-  .progress {
-    color:#aaa;
-    font-size:14px;
-    margin-bottom:10px;
-  }
+}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -59,19 +104,17 @@
 
 <h1>ENTRENAMIENTO</h1>
 
-<!-- RESULTADO BREVE -->
 {% if result %}
 <div class="box">
   {% if result.correct %}
     <p class="ok">✔ CORRECTO</p>
   {% else %}
     <p class="bad">✘ INCORRECTO</p>
-    <p>Respuesta correcta: <b>{{ result.expected }}</b></p>
+    <p class="bad">RESPUESTA CORRECTA: <b>{{ result.expected }}</b></p>
   {% endif %}
 </div>
 {% endif %}
 
-<!-- PREGUNTA ACTUAL (si hay más) -->
 {% if question %}
 <div class="box">
 
@@ -95,20 +138,13 @@
     <input type="hidden" name="question_id" value="{{ question.id }}">
     <input type="hidden" name="subcategory_id" value="{{ subcategory_id }}">
 
-    <input
-      name="user_answer"
-      required
-      autofocus
-      placeholder="Tu respuesta"
-    >
-    <br>
+    <input name="user_answer" autofocus placeholder="Tu respuesta">
     <button>Responder</button>
   </form>
 
 </div>
 {% endif %}
 
-<!-- RESUMEN FINAL -->
 {% if summary %}
 <div class="box">
   <h2>Resumen</h2>
@@ -118,7 +154,11 @@
     <li>Errores: {{ summary.attempts - summary.correct }}</li>
     <li>
       Precisión:
-      {{ (summary.correct / summary.attempts * 100) | round(2) }}%
+      {% if summary.attempts > 0 %}
+        {{ (summary.correct / summary.attempts * 100) | round(2) }}%
+      {% else %}
+        0%
+      {% endif %}
     </li>
   </ul>
 
@@ -133,20 +173,34 @@ MathJax.typesetPromise();
 </script>
 
 <script>
-{% if remaining_time is defined %}
+{% if remaining_time is defined and question %}
 let remaining = {{ remaining_time }};
 const timer = document.getElementById("timer");
 
-if (timer && remaining > 0) {
-  setInterval(() => {
-    if (remaining <= 0) return;
-    remaining--;
-    const m = Math.floor(remaining / 60);
-    const s = remaining % 60;
-    timer.textContent =
-      "Tiempo restante: " + m + ":" + s.toString().padStart(2,"0");
-  }, 1000);
-}
+const interval = setInterval(() => {
+  remaining--;
+
+  if (remaining <= 0) {
+    clearInterval(interval);
+
+    // ⛔ timeout REAL
+    fetch("/play/timeout", { method: "POST" })
+      .then(r => r.text())
+      .then(html => document.documentElement.innerHTML = html);
+
+    return;
+  }
+
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+
+  if (remaining < 10) timer.style.color = "#ff5252";
+  else if (remaining < 30) timer.style.color = "#ff9100";
+  else timer.style.color = "#aaa";
+
+  timer.textContent =
+    "Tiempo restante: " + m + ":" + s.toString().padStart(2,"0");
+}, 1000);
 {% endif %}
 </script>
 

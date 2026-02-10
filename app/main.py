@@ -13,7 +13,10 @@ from app.crud import (
     get_question,
     delete_category,
     delete_subcategory,
-    delete_question
+    delete_question,
+    update_category,
+    update_subcategory,
+    update_question
 )
 from app.engine import evaluate_answer
 
@@ -22,7 +25,7 @@ app = FastAPI(title="Sciences Trainer")
 templates = Jinja2Templates(directory="app/templates")
 
 # =====================================================
-# SESIÓN (single-user, pedagógica)
+# SESIÓN (single-user, simple)
 # =====================================================
 SESSION = {}
 
@@ -107,6 +110,32 @@ def admin_delete_question(question_id: int = Form(...)):
     delete_question(question_id)
     return RedirectResponse("/admin", status_code=303)
 
+@app.post("/admin/category/update")
+def admin_update_category(
+    category_id: int = Form(...),
+    name: str = Form(...)
+):
+    update_category(category_id, name)
+    return RedirectResponse("/admin", status_code=303)
+
+
+@app.post("/admin/subcategory/update")
+def admin_update_subcategory(
+    subcategory_id: int = Form(...),
+    name: str = Form(...)
+):
+    update_subcategory(subcategory_id, name)
+    return RedirectResponse("/admin", status_code=303)
+
+
+@app.post("/admin/question/update")
+def admin_update_question(
+    question_id: int = Form(...),
+    statement: str = Form(...),
+    answer: str = Form(...)
+):
+    update_question(question_id, statement, answer)
+    return RedirectResponse("/admin", status_code=303)
 
 # =====================================================
 # PLAY — INICIO
@@ -120,7 +149,6 @@ def play_start(
     all_questions: int | None = Form(None),
     exam: int | None = Form(None)
 ):
-    # seleccionar preguntas
     if all_questions:
         questions = get_random_questions(subcategory_id, None)
     else:
@@ -129,7 +157,6 @@ def play_start(
     if not questions:
         return RedirectResponse("/", status_code=303)
 
-    # inicializar sesión
     SESSION.clear()
     SESSION.update({
         "queue": [q.id for q in questions],
@@ -160,7 +187,7 @@ def play_start(
 
 
 # =====================================================
-# PLAY — RESPUESTA
+# PLAY — RESPUESTA NORMAL
 # =====================================================
 @app.post("/play/answer", response_class=HTMLResponse)
 def play_answer(
@@ -172,29 +199,9 @@ def play_answer(
     elapsed = time.time() - SESSION["start_time"]
     remaining = int(SESSION["time_limit"] - elapsed)
 
-    # ⛔ FIN POR TIEMPO
+    # ⛔ si el tiempo ya acabó, mostrar resumen
     if remaining <= 0:
-        correct = 0
-        if SESSION["mode"] == "exam":
-            for a in SESSION["answers"]:
-                r = evaluate_answer(a["question_id"], a["user_answer"])
-                if r["correct"]:
-                    correct += 1
-        else:
-            correct = SESSION["correct"]
-
-        return templates.TemplateResponse(
-            "play.html",
-            {
-                "request": request,
-                "summary": {
-                    "attempts": SESSION["current"],
-                    "correct": correct,
-                    "timeout": True
-                },
-                "training": False
-            }
-        )
+        return play_timeout(request)
 
     # guardar respuesta
     SESSION["answers"].append({
@@ -204,7 +211,6 @@ def play_answer(
 
     result = None
 
-    # evaluar SOLO en entrenamiento
     if SESSION["mode"] == "training":
         result = evaluate_answer(question_id, user_answer)
         if result["correct"]:
@@ -212,28 +218,9 @@ def play_answer(
 
     SESSION["current"] += 1
 
-    # ⛔ FIN POR NÚMERO DE PREGUNTAS
+    # ⛔ fin por preguntas
     if SESSION["current"] >= len(SESSION["queue"]):
-        correct = 0
-        if SESSION["mode"] == "exam":
-            for a in SESSION["answers"]:
-                r = evaluate_answer(a["question_id"], a["user_answer"])
-                if r["correct"]:
-                    correct += 1
-        else:
-            correct = SESSION["correct"]
-
-        return templates.TemplateResponse(
-            "play.html",
-            {
-                "request": request,
-                "summary": {
-                    "attempts": len(SESSION["queue"]),
-                    "correct": correct
-                },
-                "training": False
-            }
-        )
+        return play_timeout(request)
 
     # siguiente pregunta
     next_q_id = SESSION["queue"][SESSION["current"]]
@@ -254,7 +241,34 @@ def play_answer(
     if result:
         context["result"] = result
 
+    return templates.TemplateResponse("play.html", context)
+
+
+# =====================================================
+# PLAY — TIMEOUT / FIN
+# =====================================================
+@app.post("/play/timeout", response_class=HTMLResponse)
+def play_timeout(request: Request):
+    attempts = SESSION.get("current", 0)
+
+    if SESSION.get("mode") == "exam":
+        correct = 0
+        for a in SESSION.get("answers", []):
+            r = evaluate_answer(a["question_id"], a["user_answer"])
+            if r["correct"]:
+                correct += 1
+    else:
+        correct = SESSION.get("correct", 0)
+
     return templates.TemplateResponse(
         "play.html",
-        context
+        {
+            "request": request,
+            "summary": {
+                "attempts": attempts,
+                "correct": correct,
+                "timeout": True
+            },
+            "training": False
+        }
     )
