@@ -37,6 +37,17 @@ input, button {
   width:100%;
 }
 
+label {
+  display:block;
+  margin:10px 0;
+  cursor:pointer;
+}
+
+input[type="radio"] {
+  width:auto;
+  margin-right:8px;
+}
+
 ::placeholder { color:#888; }
 
 button { cursor:pointer; }
@@ -110,7 +121,10 @@ button { cursor:pointer; }
     <p class="ok">✔ CORRECTO</p>
   {% else %}
     <p class="bad">✘ INCORRECTO</p>
-    <p class="bad">RESPUESTA CORRECTA: <b>{{ result.expected }}</b></p>
+    <p class="bad">
+      RESPUESTA CORRECTA:
+      <b>{{ result.expected }}</b>
+    </p>
   {% endif %}
 </div>
 {% endif %}
@@ -131,14 +145,40 @@ button { cursor:pointer; }
   <h2>Pregunta</h2>
 
   <div id="question">
+    \[
     {{ question.statement }}
+    \]
   </div>
 
   <form method="post" action="/play/answer">
     <input type="hidden" name="question_id" value="{{ question.id }}">
     <input type="hidden" name="subcategory_id" value="{{ subcategory_id }}">
 
-    <input name="user_answer" autofocus placeholder="Tu respuesta">
+    {% if question.options and question.options|length > 0 %}
+
+      {% for o in question.options %}
+        <label>
+          <input
+            type="radio"
+            name="user_answer"
+            value="{{ o.id }}"
+            required
+          >
+          {{ o.text }}
+        </label>
+      {% endfor %}
+
+    {% else %}
+
+      <input
+        name="user_answer"
+        autofocus
+        placeholder="Tu respuesta"
+        required
+      >
+
+    {% endif %}
+
     <button>Responder</button>
   </form>
 
@@ -182,12 +222,9 @@ const interval = setInterval(() => {
 
   if (remaining <= 0) {
     clearInterval(interval);
-
-    // ⛔ timeout REAL
     fetch("/play/timeout", { method: "POST" })
       .then(r => r.text())
       .then(html => document.documentElement.innerHTML = html);
-
     return;
   }
 

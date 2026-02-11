@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.db import Base
@@ -58,10 +58,10 @@ class Question(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    # Puede contener texto + LaTeX
+    # Texto del enunciado (puede incluir LaTeX)
     statement = Column(Text, nullable=False)
 
-    # Texto normalizado, sin LaTeX complejo
+    # Respuesta directa (para matemática u otros)
     answer = Column(Text, nullable=False)
 
     subcategory_id = Column(
@@ -73,4 +73,34 @@ class Question(Base):
     subcategory = relationship(
         "Subcategory",
         back_populates="questions"
+    )
+
+    # Opciones (para lectura / alternativas)
+    options = relationship(
+        "Option",
+        back_populates="question",
+        cascade="all, delete-orphan"
+    )
+
+
+# =========================
+# OPTION / ALTERNATIVE
+# =========================
+
+class Option(Base):
+    __tablename__ = "options"
+
+    id = Column(Integer, primary_key=True)
+    question_id = Column(
+        Integer,
+        ForeignKey("questions.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    text = Column(Text, nullable=False)
+    is_correct = Column(Boolean, default=False)
+
+    question = relationship(
+        "Question",
+        back_populates="options"
     )

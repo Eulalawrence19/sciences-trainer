@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <title>Admin</title>
 
+<nav style="margin-bottom:20px;">
+  <a href="/" style="color:#81c784; margin-right:10px;">Inicio</a>
+  <strong style="margin-right:10px;">Admin</strong>
+</nav>
+<hr>
+
 <style>
 body {
   font-family: monospace;
@@ -12,308 +18,226 @@ body {
   padding:16px;
 }
 
-nav { margin-bottom:12px; }
-nav a { color:#81c784; text-decoration:none; }
-
-h1 { color:#ffd54f; margin-bottom:10px; }
-h2 { color:#4fc3f7; margin:14px 0 6px; }
+h1 { color:#ffd54f; }
+h2 { color:#4fc3f7; margin-top:20px; }
 
 input, textarea, select, button {
   background:#222;
   color:#eee;
   border:1px solid #555;
+  padding:6px;
   font-family: monospace;
-  padding:4px 6px;
-  font-size:14px;
 }
 
-select, input { height:28px; }
 textarea { width:100%; height:60px; }
-
-button { cursor:pointer; white-space:nowrap; }
-
-.row {
-  display:flex;
-  gap:6px;
-  align-items:center;
-  margin-bottom:6px;
-}
-
-.row > * { flex:1; }
-.row button { flex:0; }
+button { cursor:pointer; }
 
 .box {
   border:1px solid #333;
   padding:10px;
-  margin-bottom:12px;
+  margin-bottom:20px;
 }
-
-.danger { color:#f44336; }
-.small { font-size:13px; color:#aaa; }
 </style>
 </head>
 
 <body>
 
-<nav>
-  <a href="/">Inicio</a> | <strong>Admin</strong>
-</nav>
-<hr>
-
 <h1>ADMIN</h1>
 
 <!-- ================================================= -->
-<!-- CREAR -->
+<!-- CREAR CATEGORÍA -->
 <!-- ================================================= -->
-<h2>Crear</h2>
+<div class="box">
+<h2>Crear categoría</h2>
 
 <form method="post" action="/admin/category">
-  <div class="row">
-    <input name="name" placeholder="Nueva categoría" required>
-    <button>Crear</button>
-  </div>
+  <input name="name" placeholder="Nombre de categoría" required>
+  <button>Crear</button>
 </form>
+</div>
+
+<!-- ================================================= -->
+<!-- CREAR SUBCATEGORÍA -->
+<!-- ================================================= -->
+<div class="box">
+<h2>Crear subcategoría</h2>
 
 <form method="post" action="/admin/subcategory">
-  <div class="row">
-    <select name="category_id" required>
-      {% for c in categories %}
-        <option value="{{ c.id }}">{{ c.name }}</option>
-      {% endfor %}
-    </select>
-    <input name="name" placeholder="Nueva subcategoría" required>
-    <button>Crear</button>
-  </div>
+  <select name="category_id" required>
+    <option value="">Categoría</option>
+    {% for c in categories %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+    {% endfor %}
+  </select>
+
+  <input name="name" placeholder="Nombre de subcategoría" required>
+  <button>Crear</button>
 </form>
+</div>
+
+<!-- ================================================= -->
+<!-- CREAR PREGUNTA -->
+<!-- ================================================= -->
+<div class="box">
+<h2>Crear pregunta</h2>
 
 <form method="post" action="/admin/question">
-  <div class="row">
-    <select id="c_create">
-      <option value="">Categoría</option>
-      {% for c in categories %}
-        <option value="{{ c.id }}">{{ c.name }}</option>
+
+  <select name="subcategory_id" required>
+    <option value="">Subcategoría</option>
+    {% for c in categories %}
+      <optgroup label="{{ c.name }}">
+        {% for s in c.subcategories %}
+          <option value="{{ s.id }}">{{ s.name }}</option>
+        {% endfor %}
+      </optgroup>
+    {% endfor %}
+  </select>
+
+  <textarea name="statement" placeholder="Enunciado (LaTeX permitido)" required></textarea>
+  <input name="answer" placeholder="Respuesta directa (vacío si es lectura)">
+  <button>Guardar pregunta</button>
+
+</form>
+</div>
+
+<!-- ================================================= -->
+<!-- AGREGAR ALTERNATIVA (SIN RECARGA) -->
+<!-- ================================================= -->
+<div class="box">
+<h2>Agregar alternativa (lectura)</h2>
+
+<select id="opt-question" required>
+  <option value="">Pregunta</option>
+  {% for c in categories %}
+    {% for s in c.subcategories %}
+      {% for q in s.questions %}
+        <option value="{{ q.id }}">
+          {{ c.name }} / {{ s.name }} → {{ q.statement[:40] }}
+        </option>
       {% endfor %}
-    </select>
+    {% endfor %}
+  {% endfor %}
+</select>
 
-    <select name="subcategory_id" id="s_create" required disabled>
-      <option value="">Subcategoría</option>
-    </select>
-  </div>
+<textarea id="opt-text" placeholder="Texto de la alternativa" required></textarea>
 
-  <textarea name="statement" placeholder="Enunciado (LaTeX permitido)"></textarea>
+<label>
+  <input type="checkbox" id="opt-correct">
+  Correcta
+</label>
 
-  <div class="row">
-    <input name="answer" placeholder="Respuesta correcta" required>
-    <button>Guardar</button>
-  </div>
+<br><br>
+<button type="button" onclick="addOption()">Agregar alternativa</button>
+
+<p id="opt-status" style="color:#81c784; display:none;">✔ Guardado</p>
+</div>
+
+<!-- ================================================= -->
+<!-- ELIMINAR -->
+<!-- ================================================= -->
+<div class="box">
+<h2>Eliminar</h2>
+
+<!-- Eliminar alternativa -->
+<form method="post" action="/admin/option/delete">
+  <select name="option_id" required>
+    <option value="">Alternativa</option>
+    {% for c in categories %}
+      {% for s in c.subcategories %}
+        {% for q in s.questions %}
+          {% for o in q.options %}
+            <option value="{{ o.id }}">
+              {{ c.name }} / {{ s.name }} → {{ o.text[:40] }}
+            </option>
+          {% endfor %}
+        {% endfor %}
+      {% endfor %}
+    {% endfor %}
+  </select>
+  <button>Eliminar alternativa</button>
 </form>
 
-<hr>
+<br>
 
-<!-- ================================================= -->
-<!-- MODIFICAR / ELIMINAR -->
-<!-- ================================================= -->
-<h2>Modificar / Eliminar</h2>
-
-<div class="box">
-
-  <div class="row">
-    <select id="c_edit">
-      <option value="">Categoría</option>
-      {% for c in categories %}
-        <option value="{{ c.id }}">{{ c.name }}</option>
+<!-- Eliminar pregunta -->
+<form method="post" action="/admin/question/delete">
+  <select name="question_id" required>
+    <option value="">Pregunta</option>
+    {% for c in categories %}
+      {% for s in c.subcategories %}
+        {% for q in s.questions %}
+          <option value="{{ q.id }}">
+            {{ c.name }} / {{ s.name }} → {{ q.statement[:40] }}
+          </option>
+        {% endfor %}
       {% endfor %}
-    </select>
+    {% endfor %}
+  </select>
+  <button>Eliminar pregunta</button>
+</form>
 
-    <select id="s_edit" disabled>
-      <option value="">Subcategoría</option>
-    </select>
+<br>
 
-    <select id="q_edit" disabled>
-      <option value="">Pregunta</option>
-    </select>
-  </div>
+<!-- Eliminar subcategoría -->
+<form method="post" action="/admin/subcategory/delete">
+  <select name="subcategory_id" required>
+    <option value="">Subcategoría</option>
+    {% for c in categories %}
+      {% for s in c.subcategories %}
+        <option value="{{ s.id }}">
+          {{ c.name }} / {{ s.name }}
+        </option>
+      {% endfor %}
+    {% endfor %}
+  </select>
+  <button>Eliminar subcategoría</button>
+</form>
 
-  <div class="row">
-    <input id="edit_name" placeholder="Nuevo nombre">
-    <button onclick="submitRename()">Modificar</button>
-    <button class="danger" onclick="submitDelete()">Eliminar</button>
-  </div>
+<br>
 
-  <textarea id="edit_statement" placeholder="Editar enunciado"></textarea>
-
-  <div class="row">
-    <input id="edit_answer" placeholder="Editar respuesta">
-    <button onclick="submitQuestionEdit()">Guardar cambios</button>
-  </div>
-
-  <div class="small">
-    • Categoría/Subcategoría → renombrar o eliminar<br>
-    • Pregunta → editar contenido o eliminar
-  </div>
+<!-- Eliminar categoría -->
+<form method="post" action="/admin/category/delete">
+  <select name="category_id" required>
+    <option value="">Categoría</option>
+    {% for c in categories %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+    {% endfor %}
+  </select>
+  <button>Eliminar categoría</button>
+</form>
 
 </div>
 
 <!-- ================================================= -->
-<!-- IDS OCULTOS -->
-<!-- ================================================= -->
-<input type="hidden" id="edit_category_id">
-<input type="hidden" id="edit_subcategory_id">
-<input type="hidden" id="edit_question_id">
-
-<!-- ================================================= -->
-<!-- JS -->
+<!-- SCRIPT: SOLO PARA ALTERNATIVAS -->
 <!-- ================================================= -->
 <script>
-const tree = {
-{% for c in categories %}
-  "{{ c.id }}": {
-    name: "{{ c.name }}",
-    subs: {
-      {% for s in c.subcategories %}
-      "{{ s.id }}": {
-        name: "{{ s.name }}",
-        questions: {
-          {% for q in s.questions %}
-          "{{ q.id }}": {
-            statement: "{{ q.statement | replace('\n',' ') }}",
-            answer: "{{ q.answer }}"
-          },
-          {% endfor %}
-        }
-      },
-      {% endfor %}
-    }
-  },
-{% endfor %}
-};
+function addOption() {
+  const question_id = document.getElementById("opt-question").value;
+  const text = document.getElementById("opt-text").value;
+  const is_correct = document.getElementById("opt-correct").checked;
+  const status = document.getElementById("opt-status");
 
-// ---------- CREAR ----------
-const cCreate = document.getElementById("c_create");
-const sCreate = document.getElementById("s_create");
+  if (!question_id || !text) return;
 
-cCreate.onchange = () => {
-  sCreate.innerHTML = '<option value="">Subcategoría</option>';
-  sCreate.disabled = true;
-  if (!tree[cCreate.value]) return;
+  fetch("/admin/option", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams({
+      question_id: question_id,
+      text: text,
+      is_correct: is_correct ? "on" : ""
+    })
+  }).then(() => {
+    document.getElementById("opt-text").value = "";
+    document.getElementById("opt-correct").checked = false;
 
-  Object.entries(tree[cCreate.value].subs).forEach(([id,s])=>{
-    let o=document.createElement("option");
-    o.value=id; o.textContent=s.name;
-    sCreate.appendChild(o);
+    status.style.display = "block";
+    setTimeout(() => status.style.display = "none", 1200);
   });
-  sCreate.disabled=false;
-};
-
-// ---------- EDITAR ----------
-const cE = document.getElementById("c_edit");
-const sE = document.getElementById("s_edit");
-const qE = document.getElementById("q_edit");
-
-const nameI = document.getElementById("edit_name");
-const stI = document.getElementById("edit_statement");
-const anI = document.getElementById("edit_answer");
-
-cE.onchange = () => {
-  document.getElementById("edit_category_id").value = cE.value;
-  document.getElementById("edit_subcategory_id").value = "";
-  document.getElementById("edit_question_id").value = "";
-
-  sE.innerHTML='<option value="">Subcategoría</option>';
-  qE.innerHTML='<option value="">Pregunta</option>';
-  sE.disabled=true; qE.disabled=true;
-  nameI.value=""; stI.value=""; anI.value="";
-
-  if (!tree[cE.value]) return;
-
-  Object.entries(tree[cE.value].subs).forEach(([id,s])=>{
-    let o=document.createElement("option");
-    o.value=id; o.textContent=s.name;
-    sE.appendChild(o);
-  });
-  sE.disabled=false;
-  nameI.value = tree[cE.value].name;
-};
-
-sE.onchange = () => {
-  document.getElementById("edit_subcategory_id").value = sE.value;
-  document.getElementById("edit_question_id").value = "";
-
-  qE.innerHTML='<option value="">Pregunta</option>';
-  qE.disabled=true;
-  nameI.value=""; stI.value=""; anI.value="";
-
-  const s = tree[cE.value]?.subs[sE.value];
-  if (!s) return;
-
-  Object.entries(s.questions).forEach(([id,q])=>{
-    let o=document.createElement("option");
-    o.value=id;
-    o.textContent=q.statement.slice(0,40);
-    qE.appendChild(o);
-  });
-  qE.disabled=false;
-  nameI.value = s.name;
-};
-
-qE.onchange = () => {
-  document.getElementById("edit_question_id").value = qE.value;
-  const q = tree[cE.value].subs[sE.value].questions[qE.value];
-  stI.value = q.statement;
-  anI.value = q.answer;
-};
-
-// ---------- POST HELPERS ----------
-function post(path, data){
-  const f=document.createElement("form");
-  f.method="post"; f.action=path;
-  for (let k in data){
-    let i=document.createElement("input");
-    i.type="hidden"; i.name=k; i.value=data[k];
-    f.appendChild(i);
-  }
-  document.body.appendChild(f);
-  f.submit();
-}
-
-// ---------- ACTIONS ----------
-function submitRename(){
-  const catId = document.getElementById("edit_category_id").value;
-  const subId = document.getElementById("edit_subcategory_id").value;
-  const name  = nameI.value;
-
-  if (subId)
-    post("/admin/subcategory/update",{subcategory_id:subId,name:name});
-  else if (catId)
-    post("/admin/category/update",{category_id:catId,name:name});
-  else
-    alert("Selecciona categoría o subcategoría");
-}
-
-function submitQuestionEdit(){
-  const qId = document.getElementById("edit_question_id").value;
-  if (!qId) return alert("Selecciona una pregunta");
-
-  post("/admin/question/update",{
-    question_id:qId,
-    statement:stI.value,
-    answer:anI.value
-  });
-}
-
-function submitDelete(){
-  const qId = document.getElementById("edit_question_id").value;
-  const subId = document.getElementById("edit_subcategory_id").value;
-  const catId = document.getElementById("edit_category_id").value;
-
-  if (qId)
-    post("/admin/question/delete",{question_id:qId});
-  else if (subId)
-    post("/admin/subcategory/delete",{subcategory_id:subId});
-  else if (catId)
-    post("/admin/category/delete",{category_id:catId});
-  else
-    alert("Selecciona algo para eliminar");
 }
 </script>
 

@@ -3,7 +3,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.exc import IntegrityError
 
 from app.db import SessionLocal
-from app.models import Category, Subcategory, Question
+from app.models import Category, Subcategory, Question, Option
 
 
 # =====================================================
@@ -20,8 +20,8 @@ def _get_db() -> Session:
 
 def get_categories():
     """
-    Devuelve todas las categorías con subcategorías y preguntas
-    (eager loading completo para admin)
+    Devuelve todas las categorías con subcategorías,
+    preguntas y opciones (eager loading para admin)
     """
     db = _get_db()
     try:
@@ -30,13 +30,13 @@ def get_categories():
             .options(
                 joinedload(Category.subcategories)
                 .joinedload(Subcategory.questions)
+                .joinedload(Question.options)
             )
             .order_by(Category.name)
             .all()
         )
     finally:
         db.close()
-
 
 
 def create_category(name: str):
@@ -56,7 +56,6 @@ def update_category(category_id: int, new_name: str) -> bool:
         cat = db.query(Category).filter(Category.id == category_id).first()
         if not cat:
             return False
-
         cat.name = new_name
         db.commit()
         return True
@@ -70,7 +69,6 @@ def delete_category(category_id: int) -> bool:
         cat = db.query(Category).filter(Category.id == category_id).first()
         if not cat:
             return False
-
         db.delete(cat)
         db.commit()
         return True
@@ -114,7 +112,6 @@ def update_subcategory(subcategory_id: int, new_name: str) -> bool:
         )
         if not sub:
             return False
-
         sub.name = new_name
         db.commit()
         return True
@@ -132,7 +129,6 @@ def delete_subcategory(subcategory_id: int) -> bool:
         )
         if not sub:
             return False
-
         db.delete(sub)
         db.commit()
         return True
@@ -147,14 +143,14 @@ def delete_subcategory(subcategory_id: int) -> bool:
 def create_question(subcategory_id: int, statement: str, answer: str):
     db = _get_db()
     try:
-        db.add(
-            Question(
-                subcategory_id=subcategory_id,
-                statement=statement,
-                answer=answer
-            )
+        q = Question(
+            subcategory_id=subcategory_id,
+            statement=statement,
+            answer=answer
         )
+        db.add(q)
         db.commit()
+        return q.id
     finally:
         db.close()
 
@@ -164,6 +160,7 @@ def get_question(question_id: int):
     try:
         return (
             db.query(Question)
+            .options(joinedload(Question.options))
             .filter(Question.id == question_id)
             .first()
         )
@@ -181,7 +178,6 @@ def update_question(
         q = db.query(Question).filter(Question.id == question_id).first()
         if not q:
             return False
-
         q.statement = new_statement
         q.answer = new_answer
         db.commit()
@@ -196,7 +192,6 @@ def delete_question(question_id: int) -> bool:
         q = db.query(Question).filter(Question.id == question_id).first()
         if not q:
             return False
-
         db.delete(q)
         db.commit()
         return True
@@ -207,55 +202,62 @@ def delete_question(question_id: int) -> bool:
 def get_random_questions(subcategory_id: int, limit: int | None = None):
     """
     Devuelve preguntas aleatorias SIN REPETICIÓN
+    (incluye opciones si existen)
     """
     db = _get_db()
     try:
         query = (
             db.query(Question)
+            .options(joinedload(Question.options))
             .filter(Question.subcategory_id == subcategory_id)
             .order_by(func.random())
         )
-
         if limit is not None:
             query = query.limit(limit)
-
         return query.all()
     finally:
         db.close()
 
-from app.db import SessionLocal
-from app.models import Category, Subcategory, Question
 
+# =====================================================
+# OPTIONS / ALTERNATIVAS
+# =====================================================
 
-def update_category(category_id: int, name: str):
-    db = SessionLocal()
+def create_option(question_id: int, text: str, is_correct: bool = False):
+    db = _get_db()
     try:
-        c = db.query(Category).get(category_id)
-        if c:
-            c.name = name
-            db.commit()
+        opt = Option(
+            question_id=question_id,
+            text=text,
+            is_correct=is_correct
+        )
+        db.add(opt)
+        db.commit()
+        return opt.id
     finally:
         db.close()
 
 
-def update_subcategory(subcategory_id: int, name: str):
-    db = SessionLocal()
+def get_options(question_id: int):
+    db = _get_db()
     try:
-        s = db.query(Subcategory).get(subcategory_id)
-        if s:
-            s.name = name
-            db.commit()
+        return (
+            db.query(Option)
+            .filter(Option.question_id == question_id)
+            .all()
+        )
     finally:
         db.close()
 
 
-def update_question(question_id: int, statement: str, answer: str):
-    db = SessionLocal()
+def delete_option(option_id: int) -> bool:
+    db = _get_db()
     try:
-        q = db.query(Question).get(question_id)
-        if q:
-            q.statement = statement
-            q.answer = answer
-            db.commit()
+        opt = db.query(Option).filter(Option.id == option_id).first()
+        if not opt:
+            return False
+        db.delete(opt)
+        db.commit()
+        return True
     finally:
         db.close()

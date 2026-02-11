@@ -8,6 +8,8 @@ from app.crud import (
     create_category,
     create_subcategory,
     create_question,
+    create_option,
+    delete_option,
     get_categories,
     get_random_questions,
     get_question,
@@ -82,6 +84,10 @@ def admin_create_subcategory(
     create_subcategory(category_id, name)
     return RedirectResponse("/admin", status_code=303)
 
+@app.post("/admin/option/delete")
+def admin_delete_option(option_id: int = Form(...)):
+    delete_option(option_id)
+    return RedirectResponse("/admin", status_code=303)
 
 @app.post("/admin/question")
 def admin_create_question(
@@ -90,6 +96,15 @@ def admin_create_question(
     answer: str = Form(...)
 ):
     create_question(subcategory_id, statement, answer)
+    return RedirectResponse("/admin", status_code=303)
+
+@app.post("/admin/option")
+def admin_create_option(
+    question_id: int = Form(...),
+    text: str = Form(...),
+    is_correct: bool = Form(False)
+):
+    create_option(question_id, text, is_correct)
     return RedirectResponse("/admin", status_code=303)
 
 
