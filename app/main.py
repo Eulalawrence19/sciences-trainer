@@ -75,7 +75,27 @@ def index(request: Request):
             "id": c.id,
             "name": c.name,
             "subcategories": [
-                {"id": s.id, "name": s.name}
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "questions": [
+                        {
+                            "id": q.id,
+                            "eval_type": q.eval_type,
+                            "statement_text": q.statement_text,
+                            "statement_math": q.statement_math,
+                            "options": [
+                                {
+                                    "id": o.id,
+                                    "text": o.text,
+                                    "is_correct": o.is_correct
+                                }
+                                for o in getattr(q, "options", [])
+                            ]
+                        }
+                        for q in getattr(s, "questions", [])
+                    ]
+                }
                 for s in c.subcategories
             ]
         }
@@ -86,7 +106,6 @@ def index(request: Request):
         "index.html",
         {"request": request, "categories": categories},
     )
-
 # =====================================================
 # ADMIN
 # =====================================================
@@ -100,7 +119,27 @@ def admin_home(request: Request):
             "id": c.id,
             "name": c.name,
             "subcategories": [
-                {"id": s.id, "name": s.name}
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "questions": [
+                        {
+                            "id": q.id,
+                            "eval_type": q.eval_type,
+                            "statement_text": q.statement_text,
+                            "statement_math": q.statement_math,
+                            "options": [
+                                {
+                                    "id": o.id,
+                                    "text": o.text,
+                                    "is_correct": o.is_correct
+                                }
+                                for o in getattr(q, "options", [])
+                            ]
+                        }
+                        for q in getattr(s, "questions", [])
+                    ]
+                }
                 for s in c.subcategories
             ]
         }
