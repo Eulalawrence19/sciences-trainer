@@ -4,12 +4,6 @@
 <meta charset="UTF-8">
 <title>Admin</title>
 
-<nav style="margin-bottom:20px;">
-  <a href="/" style="color:#81c784; margin-right:10px;">Inicio</a>
-  <strong style="margin-right:10px;">Admin</strong>
-</nav>
-<hr>
-
 <style>
 body {
   font-family: monospace;
@@ -17,228 +11,469 @@ body {
   color:#eee;
   padding:16px;
 }
-
+nav a {
+  color:#81c784;
+  margin-right:10px;
+  text-decoration:none;
+}
 h1 { color:#ffd54f; }
-h2 { color:#4fc3f7; margin-top:20px; }
-
+h2 {
+  color:#4fc3f7;
+  margin:0;
+  padding:10px;
+  cursor:pointer;
+  background:#181818;
+}
+h3 { margin-top:20px; color:#90caf9; }
 input, textarea, select, button {
   background:#222;
   color:#eee;
   border:1px solid #555;
   padding:6px;
   font-family: monospace;
+  width:100%;
 }
-
-textarea { width:100%; height:60px; }
-button { cursor:pointer; }
-
-.box {
-  border:1px solid #333;
-  padding:10px;
-  margin-bottom:20px;
+textarea { height:90px; }
+button { cursor:pointer; margin-top:6px; }
+button.danger { background:#7f0000; }
+.section { border:1px solid #333; margin-bottom:16px; }
+.content { display:none; padding:12px; }
+.status {
+  color:#81c784;
+  font-size:13px;
+  margin-top:6px;
+  display:none;
 }
 </style>
 </head>
 
 <body>
 
+<nav>
+  <a href="/">Inicio</a>
+  <strong>Admin</strong>
+</nav>
+
+<hr>
 <h1>ADMIN</h1>
 
 <!-- ================================================= -->
-<!-- CREAR CATEGORÍA -->
+<!-- 📁 ESTRUCTURA -->
 <!-- ================================================= -->
-<div class="box">
-<h2>Crear categoría</h2>
 
-<form method="post" action="/admin/category">
+<div class="section">
+<h2 onclick="toggle(this)">📁 Estructura</h2>
+<div class="content">
+
+<h3>Crear categoría</h3>
+<form data-ajax action="/admin/category" autocomplete="off">
   <input name="name" placeholder="Nombre de categoría" required>
   <button>Crear</button>
+  <div class="status">✔ Guardado</div>
 </form>
-</div>
 
-<!-- ================================================= -->
-<!-- CREAR SUBCATEGORÍA -->
-<!-- ================================================= -->
-<div class="box">
-<h2>Crear subcategoría</h2>
+<h3>Crear subcategoría</h3>
+<form data-ajax action="/admin/subcategory" autocomplete="off">
 
-<form method="post" action="/admin/subcategory">
-  <select name="category_id" required>
-    <option value="">Categoría</option>
-    {% for c in categories %}
-      <option value="{{ c.id }}">{{ c.name }}</option>
-    {% endfor %}
-  </select>
-
-  <input name="name" placeholder="Nombre de subcategoría" required>
-  <button>Crear</button>
-</form>
-</div>
-
-<!-- ================================================= -->
-<!-- CREAR PREGUNTA -->
-<!-- ================================================= -->
-<div class="box">
-<h2>Crear pregunta</h2>
-
-<form method="post" action="/admin/question">
-
-  <select name="subcategory_id" required>
-    <option value="">Subcategoría</option>
-    {% for c in categories %}
-      <optgroup label="{{ c.name }}">
-        {% for s in c.subcategories %}
-          <option value="{{ s.id }}">{{ s.name }}</option>
-        {% endfor %}
-      </optgroup>
-    {% endfor %}
-  </select>
-
-  <textarea name="statement" placeholder="Enunciado (LaTeX permitido)" required></textarea>
-  <input name="answer" placeholder="Respuesta directa (vacío si es lectura)">
-  <button>Guardar pregunta</button>
-
-</form>
-</div>
-
-<!-- ================================================= -->
-<!-- AGREGAR ALTERNATIVA (SIN RECARGA) -->
-<!-- ================================================= -->
-<div class="box">
-<h2>Agregar alternativa (lectura)</h2>
-
-<select id="opt-question" required>
-  <option value="">Pregunta</option>
-  {% for c in categories %}
-    {% for s in c.subcategories %}
-      {% for q in s.questions %}
-        <option value="{{ q.id }}">
-          {{ c.name }} / {{ s.name }} → {{ q.statement[:40] }}
-        </option>
-      {% endfor %}
-    {% endfor %}
-  {% endfor %}
+<select name="category_id" required>
+{% for c in categories %}
+  <option value="{{ c.id }}">[{{ c.id }}] {{ c.name }}</option>
+{% endfor %}
 </select>
 
-<textarea id="opt-text" placeholder="Texto de la alternativa" required></textarea>
+<input name="name" placeholder="Nombre de subcategoría" required>
+
+<button>Crear</button>
+<div class="status">✔ Guardado</div>
+
+</form>
+
+</div>
+</div>
+
+<!-- ================================================= -->
+<!-- ✏️ CONTENIDO -->
+<!-- ================================================= -->
+
+<div class="section">
+<h2 onclick="toggle(this)">✏️ Contenido</h2>
+<div class="content">
+
+<h3>Crear pregunta</h3>
+
+<form id="create-question-form" autocomplete="off">
+
+<select name="subcategory_id" required>
+
+{% for c in categories %}
+  <optgroup label="[{{ c.id }}] {{ c.name }}">
+    {% for s in c.subcategories %}
+      <option value="{{ s.id }}">[{{ s.id }}] {{ s.name }}</option>
+    {% endfor %}
+  </optgroup>
+{% endfor %}
+
+</select>
+
+<textarea
+  name="statement"
+  placeholder="Enunciado"
+  required
+></textarea>
+
+<select name="eval_type" id="eval_type" onchange="onEvalTypeChange()" required>
+  <option value="">Tipo</option>
+  <option value="TEXT">Texto</option>
+  <option value="EQUATION">Ecuación</option>
+  <option value="NUMERIC">Numérico</option>
+  <option value="CHOICE">Alternativas</option>
+  <option value="SYNTAX">Sintaxis</option>
+</select>
+
+<textarea
+  name="answer"
+  id="answer"
+  placeholder="Respuesta"
+  rows="3"
+  style="font-family:monospace;"
+></textarea>
+
+<input
+  name="tolerance"
+  id="tolerance"
+  type="number"
+  step="any"
+  placeholder="Tolerancia"
+  style="display:none;"
+>
+
+<button>Guardar</button>
+<div class="status"></div>
+
+</form>
+
+
+<h3>Agregar alternativa (CHOICE)</h3>
+
+<form data-ajax action="/admin/option" autocomplete="off">
+
+<select name="question_id" required>
+
+{% for c in categories %}
+{% for s in c.subcategories %}
+{% for q in s.questions if q.eval_type == "CHOICE" %}
+  <option value="{{ q.id }}">
+    [{{ q.id }}] {{ c.name }} / {{ s.name }}
+  </option>
+{% endfor %}
+{% endfor %}
+{% endfor %}
+
+</select>
+
+<textarea
+  name="text"
+  placeholder="Texto alternativa"
+  required
+></textarea>
 
 <label>
-  <input type="checkbox" id="opt-correct">
-  Correcta
+  <input type="checkbox" name="is_correct"> Correcta
 </label>
 
-<br><br>
-<button type="button" onclick="addOption()">Agregar alternativa</button>
+<button>Agregar</button>
+<div class="status">✔ Guardado</div>
 
-<p id="opt-status" style="color:#81c784; display:none;">✔ Guardado</p>
-</div>
-
-<!-- ================================================= -->
-<!-- ELIMINAR -->
-<!-- ================================================= -->
-<div class="box">
-<h2>Eliminar</h2>
-
-<!-- Eliminar alternativa -->
-<form method="post" action="/admin/option/delete">
-  <select name="option_id" required>
-    <option value="">Alternativa</option>
-    {% for c in categories %}
-      {% for s in c.subcategories %}
-        {% for q in s.questions %}
-          {% for o in q.options %}
-            <option value="{{ o.id }}">
-              {{ c.name }} / {{ s.name }} → {{ o.text[:40] }}
-            </option>
-          {% endfor %}
-        {% endfor %}
-      {% endfor %}
-    {% endfor %}
-  </select>
-  <button>Eliminar alternativa</button>
-</form>
-
-<br>
-
-<!-- Eliminar pregunta -->
-<form method="post" action="/admin/question/delete">
-  <select name="question_id" required>
-    <option value="">Pregunta</option>
-    {% for c in categories %}
-      {% for s in c.subcategories %}
-        {% for q in s.questions %}
-          <option value="{{ q.id }}">
-            {{ c.name }} / {{ s.name }} → {{ q.statement[:40] }}
-          </option>
-        {% endfor %}
-      {% endfor %}
-    {% endfor %}
-  </select>
-  <button>Eliminar pregunta</button>
-</form>
-
-<br>
-
-<!-- Eliminar subcategoría -->
-<form method="post" action="/admin/subcategory/delete">
-  <select name="subcategory_id" required>
-    <option value="">Subcategoría</option>
-    {% for c in categories %}
-      {% for s in c.subcategories %}
-        <option value="{{ s.id }}">
-          {{ c.name }} / {{ s.name }}
-        </option>
-      {% endfor %}
-    {% endfor %}
-  </select>
-  <button>Eliminar subcategoría</button>
-</form>
-
-<br>
-
-<!-- Eliminar categoría -->
-<form method="post" action="/admin/category/delete">
-  <select name="category_id" required>
-    <option value="">Categoría</option>
-    {% for c in categories %}
-      <option value="{{ c.id }}">{{ c.name }}</option>
-    {% endfor %}
-  </select>
-  <button>Eliminar categoría</button>
 </form>
 
 </div>
+</div>
 
 <!-- ================================================= -->
-<!-- SCRIPT: SOLO PARA ALTERNATIVAS -->
+<!-- 📥 IMPORTAR -->
 <!-- ================================================= -->
+
+<div class="section">
+<h2 onclick="toggle(this)">📥 Importar preguntas</h2>
+<div class="content">
+
+<p>Formato CSV:</p>
+
+<pre>
+subcategory_id,statement,eval_type,answer,tolerance
+1,Escribe un literal decimal que represente cero punto cero uno,TEXT,0.01,
+1,Escribe un literal decimal que represente cinco,TEXT,5,
+</pre>
+
+<form action="/admin/import" method="post" enctype="multipart/form-data">
+
+<input
+  type="file"
+  name="file"
+  accept=".csv"
+  required
+>
+
+<button>Importar</button>
+
+</form>
+
+</div>
+</div>
+
+<!-- ================================================= -->
+<!-- 📄 IMPORTAR DATASET (ARCHIVO) -->
+<!-- ================================================= -->
+
+<div class="section">
+<h2 onclick="toggle(this)">📄 Importar dataset (archivo)</h2>
+<div class="content">
+
+<p>Formato del archivo (.txt):</p>
+
+<pre>
+Q: Escribe un literal decimal que represente cinco
+A: 5
+
+Q: Escribe un literal decimal que represente diez
+A: 10
+
+Q: Calcula √2
+A: 1.414213
+T: 0.001
+</pre>
+
+<form action="/admin/import/file" method="post" enctype="multipart/form-data">
+
+<select name="subcategory_id" required>
+
+{% for c in categories %}
+  <optgroup label="{{ c.name }}">
+    {% for s in c.subcategories %}
+      <option value="{{ s.id }}">[{{ s.id }}] {{ s.name }}</option>
+    {% endfor %}
+  </optgroup>
+{% endfor %}
+
+</select>
+
+<input type="file" name="file" accept=".txt" required>
+
+<button>Importar archivo</button>
+
+</form>
+
+</div>
+</div>
+<!-- ================================================= -->
+<!-- 🗑️ ELIMINAR -->
+<!-- ================================================= -->
+
+<div class="section">
+<h2 onclick="toggle(this)">🗑️ Eliminar</h2>
+<div class="content">
+
+<h3>Eliminar categoría</h3>
+
+<form data-ajax action="/admin/category/delete" autocomplete="off">
+
+<select name="category_id" required>
+
+{% for c in categories %}
+  <option value="{{ c.id }}">[{{ c.id }}] {{ c.name }}</option>
+{% endfor %}
+
+</select>
+
+<button class="danger">Eliminar categoría</button>
+<div class="status">✖ Eliminado</div>
+
+</form>
+
+
+<h3>Eliminar subcategoría</h3>
+
+<form data-ajax action="/admin/subcategory/delete" autocomplete="off">
+
+<select name="subcategory_id" required>
+
+{% for c in categories %}
+{% for s in c.subcategories %}
+  <option value="{{ s.id }}">
+    [{{ s.id }}] {{ c.name }} / {{ s.name }}
+  </option>
+{% endfor %}
+{% endfor %}
+
+</select>
+
+<button class="danger">Eliminar subcategoría</button>
+<div class="status">✖ Eliminado</div>
+
+</form>
+
+
+<h3>Eliminar pregunta</h3>
+
+<form data-ajax action="/admin/question/delete" autocomplete="off">
+
+<select name="question_id" required>
+
+{% for c in categories %}
+{% for s in c.subcategories %}
+{% for q in s.questions %}
+  <option value="{{ q.id }}">
+    [{{ q.id }}] {{ c.name }} / {{ s.name }} → {{ (q.statement_text or q.statement_math)[:40] }}
+  </option>
+{% endfor %}
+{% endfor %}
+{% endfor %}
+
+</select>
+
+<button class="danger">Eliminar pregunta</button>
+<div class="status">✖ Eliminado</div>
+
+</form>
+
+
+<h3>Eliminar alternativa</h3>
+
+<form data-ajax action="/admin/option/delete" autocomplete="off">
+
+<select name="option_id" required>
+
+{% for c in categories %}
+{% for s in c.subcategories %}
+{% for q in s.questions if q.eval_type == "CHOICE" %}
+{% for o in q.options %}
+  <option value="{{ o.id }}">
+    [{{ o.id }}] {{ c.name }} / {{ s.name }} → {{ o.text[:40] }}
+  </option>
+{% endfor %}
+{% endfor %}
+{% endfor %}
+{% endfor %}
+
+</select>
+
+<button class="danger">Eliminar alternativa</button>
+<div class="status">✖ Eliminado</div>
+
+</form>
+
+</div>
+</div>
+
+<!-- ================================================= -->
+<!-- JS -->
+<!-- ================================================= -->
+
 <script>
-function addOption() {
-  const question_id = document.getElementById("opt-question").value;
-  const text = document.getElementById("opt-text").value;
-  const is_correct = document.getElementById("opt-correct").checked;
-  const status = document.getElementById("opt-status");
 
-  if (!question_id || !text) return;
-
-  fetch("/admin/option", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: new URLSearchParams({
-      question_id: question_id,
-      text: text,
-      is_correct: is_correct ? "on" : ""
-    })
-  }).then(() => {
-    document.getElementById("opt-text").value = "";
-    document.getElementById("opt-correct").checked = false;
-
-    status.style.display = "block";
-    setTimeout(() => status.style.display = "none", 1200);
-  });
+function toggle(h) {
+  const c = h.nextElementSibling;
+  c.style.display = c.style.display === "block" ? "none" : "block";
 }
+
+function onEvalTypeChange(){
+
+  const t = eval_type.value
+
+  answer.style.display = t === "CHOICE" ? "none" : "block"
+
+  tolerance.style.display = t === "NUMERIC" ? "block" : "none"
+
+  if(t === "SYNTAX"){
+    answer.rows = 8
+  }
+  else{
+    answer.rows = 3
+  }
+
+}
+
+document.querySelectorAll("form[data-ajax]").forEach(form => {
+
+  form.addEventListener("submit", e => {
+
+    e.preventDefault()
+
+    const status = form.querySelector(".status")
+
+    const data = new FormData(form)
+
+    fetch(form.action,{method:"POST",body:data})
+      .then(() => {
+
+        status.style.display="block"
+
+        setTimeout(()=>status.style.display="none",1200)
+
+        form.reset()
+
+      })
+
+  })
+
+})
+
+const qForm = document.getElementById("create-question-form")
+
+qForm.addEventListener("submit", async e => {
+
+  e.preventDefault()
+
+  const status = qForm.querySelector(".status")
+
+  status.style.display="block"
+
+  status.textContent="Guardando..."
+
+  const data = new FormData(qForm)
+
+  try {
+
+    const res = await fetch("/admin/question/json",{method:"POST",body:data})
+
+    const json = await res.json()
+
+    if(json.ok){
+
+      status.textContent=`✔ Guardado (ID ${json.id})`
+
+      qForm.reset()
+
+    }
+
+    else{
+
+      status.textContent=`✖ Error: ${json.error}`
+
+    }
+
+  }
+
+  catch{
+
+    status.textContent="✖ Error de conexión"
+
+  }
+
+  setTimeout(()=>status.style.display="none",2000)
+
+})
+
+qForm.addEventListener("keydown",e=>{
+
+  if(e.ctrlKey && e.key==="Enter"){
+
+    qForm.requestSubmit()
+
+  }
+
+})
+
 </script>
 
 </body>

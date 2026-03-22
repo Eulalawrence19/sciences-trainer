@@ -1,16 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Navegación</title>
+
+<style>
+/* ============================= */
+/* NAVIGATION BAR                */
+/* ============================= */
+
+.menu {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 10px 0;
+  margin-bottom: 16px;
+
+  font-family: monospace;
+}
+
+.menu-left,
+.menu-right {
+  display: flex;
+  align-items: center;
+}
+
+/* --- LINKS --- */
+.menu a {
+  color: #4fc3f7;
+  text-decoration: none;
+  margin-right: 16px;
+  font-weight: bold;
+}
+
+.menu a:hover {
+  text-decoration: underline;
+}
+
+/* --- BRAND --- */
+.menu .brand {
+  color: #81c784;
+}
+
+/* --- ACTIVE STATE --- */
+.menu .active {
+  color: #ffd54f;
+}
+
+/* --- DIVIDER --- */
+.divider {
+  color: #555;
+  margin: 0 8px;
+}
+
+/* --- MODE LABEL --- */
+.mode {
+  color: #aaa;
+  font-size: 12px;
+  margin-left: 12px;
+  letter-spacing: 1px;
+}
+</style>
+</head>
+
+<body>
+
 <nav class="menu">
-  <a href="/">Inicio</a>
 
-  {% if training %}
-    <a href="/">Cambiar categoría</a>
-  {% endif %}
+  <!-- IZQUIERDA -->
+  <div class="menu-left">
+    <a href="/" class="brand">Inicio</a>
 
-  {% if admin %}
-    <a href="/admin">Admin</a>
-    <a href="/">Salir del admin</a>
-  {% else %}
-    <a href="/admin">Admin</a>
-  {% endif %}
+    {% if training %}
+      <span class="divider">/</span>
+      <a href="/">Cambiar categoría</a>
+      <span class="mode">ENTRENAMIENTO</span>
+    {% endif %}
+
+    {% if admin %}
+      <span class="mode">ADMIN</span>
+    {% endif %}
+  </div>
+
+  <!-- DERECHA -->
+  <div class="menu-right">
+    {% if admin %}
+      <a href="/admin" class="active">Admin</a>
+      <a href="/">Salir</a>
+    {% else %}
+      <a href="/admin">Admin</a>
+    {% endif %}
+  </div>
+
 </nav>
 
 <hr>
+
+</body>
+</html>

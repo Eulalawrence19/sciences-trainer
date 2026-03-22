@@ -6,250 +6,284 @@
 <title>Sciences Trainer</title>
 
 <style>
-  /* =========================
-     BASE
-     ========================= */
+* { box-sizing: border-box; }
 
-  * {
-    box-sizing: border-box;
-  }
+body {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #e2e2e2;
+  margin: 0;
+  padding: 0;
+  max-width: 720px;
+  margin: auto;
+
+  background:
+    linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.6)),
+    url("/static/img/2023_Kianna.jpg");
+
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* ================= NAVBAR ================= */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  display: flex;
+  gap: 16px;
+
+  padding: 12px 16px;
+
+  background: rgba(10,10,10,0.75);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+nav a {
+  color: #6ec6ff;
+  text-decoration: none;
+  opacity: 0.8;
+  font-size: 14px;
+}
+
+nav a.active {
+  color: #ffd166;
+  opacity: 1;
+}
+
+nav a:hover {
+  opacity: 1;
+}
+
+/* ================= MAIN ================= */
+.container {
+  padding: 20px;
+}
+
+h1 {
+  font-size: 22px;
+  color: #ffd166;
+  margin-bottom: 12px;
+}
+
+/* ================= FORM ================= */
+form {
+  display: grid;
+  gap: 18px;
+
+  background: rgba(15,15,15,0.9);
+  padding: 18px;
+  border-radius: 12px;
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05),
+    0 20px 60px rgba(0,0,0,0.8);
+}
+
+label {
+  font-size: 14px;
+}
+
+input, select {
+  width: 100%;
+  padding: 11px;
+  background: #14161a;
+  color: #e6e6e6;
+  border: 1px solid #2a2e35;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #6ec6ff;
+}
+
+/* ================= BUTTON ================= */
+button {
+  margin-top: 8px;
+  padding: 14px;
+  font-size: 16px;
+  background: #c20b0b;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #9e0909;
+}
+
+/* ================= BOX ================= */
+.box {
+  background: #111318;
+  padding: 12px 14px;
+  border-radius: 8px;
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 600px) {
 
   body {
-    font-family: monospace;
-    background: #0e0e0e;
-    color: #eee;
+    background-attachment: scroll;
+  }
+
+  form {
+    padding: 14px;
+  }
+
+  button {
+    font-size: 18px;
     padding: 16px;
-    max-width: 700px;
-    margin: 0 auto;
   }
 
-  h1 {
-    color: #ffd54f;
-    font-size: 22px;
+  input, select {
+    font-size: 16px;
   }
+}
 
-  hr {
-    border: none;
-    border-top: 1px solid #333;
-    margin: 16px 0;
-  }
+.hidden { display: none; }
 
-  /* =========================
-     NAV
-     ========================= */
-
-  nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 8px;
-  }
-
-  nav a {
-    color: #4fc3f7;
-    text-decoration: none;
-    font-size: 15px;
-  }
-
-  /* =========================
-     FORM ELEMENTS
-     ========================= */
-
-  label {
-    display: block;
-    margin-top: 20px;
-  }
-
-  input,
-  select,
-  button {
-    width: 100%;
-    background: #222;
-    color: #eee;
-    border: 1px solid #555;
-    font-family: monospace;
-    padding: 10px;
-    margin-top: 6px;
-    font-size: 16px; /* evita zoom en móvil */
-  }
-
-  input[type="checkbox"],
-  input[type="radio"] {
-    width: auto;
-    transform: scale(1.2);
-    margin-right: 6px;
-  }
-
-  button {
-    margin-top: 25px;
-    cursor: pointer;
-    font-size: 17px;
-    padding: 12px;
-  }
-
-  /* =========================
-     HELPERS
-     ========================= */
-
-  .hint {
-    color: #aaa;
-    font-size: 13px;
-    margin-top: 6px;
-    display: block;
-  }
-
-  .box {
-    margin-top: 20px;
-    padding: 12px;
-    border: 1px solid #444;
-    background: #141414;
-  }
-
-  /* =========================
-     MOBILE REFINEMENT
-     ========================= */
-
-  @media (max-width: 480px) {
-    body {
-      padding: 12px;
-    }
-
-    h1 {
-      font-size: 20px;
-    }
-
-    .box {
-      padding: 12px;
-    }
-  }
 </style>
 </head>
 
 <body>
 
+<!-- NAV -->
 <nav>
-  <a href="/">Inicio</a>
+  <a href="/" class="active">Inicio</a>
   <a href="/admin">Admin</a>
 </nav>
 
-<hr>
+<div class="container">
 
 <h1>Configurar sesión</h1>
 
 <form method="post" action="/play/question">
 
-  <!-- ========================= -->
   <!-- CATEGORÍA -->
-  <!-- ========================= -->
-  <label>Categoría</label>
-  <select id="categorySelect" required>
-    <option value="">-- Selecciona categoría --</option>
-    {% for c in categories %}
-      <option value="{{ c.id }}">{{ c.name }}</option>
-    {% endfor %}
-  </select>
-
-  <!-- ========================= -->
-  <!-- SUBCATEGORÍA -->
-  <!-- ========================= -->
-  <label>Subcategoría</label>
-  <select name="subcategory_id" id="subcategorySelect" required>
-    <option value="">-- Selecciona subcategoría --</option>
-  </select>
-
-  <!-- ========================= -->
-  <!-- TODO EL BANCO -->
-  <!-- ========================= -->
-  <label>
-    <input type="checkbox" name="all_questions" value="1">
-    Usar todo el banco de preguntas
-  </label>
-  <span class="hint">
-    Si se activa, se ignora el número de preguntas.
-  </span>
-
-  <!-- ========================= -->
-  <!-- NÚMERO DE PREGUNTAS -->
-  <!-- ========================= -->
-  <label>Número de preguntas</label>
-  <input
-    type="number"
-    name="limit"
-    min="1"
-    max="10000"
-    value="20"
-  >
-
-  <!-- ========================= -->
-  <!-- TIEMPO -->
-  <!-- ========================= -->
-  <label>Tiempo total (minutos)</label>
-  <input
-    type="number"
-    name="time_limit"
-    min="1"
-    max="180"
-    value="30"
-    required
-  >
-
-  <!-- ========================= -->
-  <!-- MODO -->
-  <!-- ========================= -->
-  <div class="box">
-    <strong>Modo</strong>
-
-    <label>
-      <input type="radio" name="exam" value="" checked>
-      Entrenamiento (feedback inmediato)
-    </label>
-
-    <label>
-      <input type="radio" name="exam" value="1">
-      Examen (solo resultado final)
-    </label>
-
-    <span class="hint">
-      En modo examen no se muestran correcciones ni respuestas durante la prueba.
-    </span>
+  <div>
+    <label>Categoría</label>
+    <select id="categorySelect" required>
+      <option value="">Selecciona categoría</option>
+      {% for c in categories %}
+        <option value="{{ c.id }}">{{ c.name }}</option>
+      {% endfor %}
+    </select>
   </div>
 
-  <button>Empezar</button>
+  <!-- SUBCATEGORÍA -->
+  <div>
+    <label>Subcategoría</label>
+
+    <!-- BUSCADOR -->
+    <input
+      type="text"
+      id="subcategorySearch"
+      placeholder="Primero selecciona categoría"
+      disabled
+    >
+
+    <!-- DROPDOWN -->
+    <select name="subcategory_id" id="subcategorySelect" required>
+      <option value="">Selecciona subcategoría</option>
+    </select>
+  </div>
+
+  <!-- TODO EL BANCO -->
+  <div class="box" style="display:flex; justify-content:space-between; align-items:center;">
+    <label style="display:flex; align-items:center; gap:10px; margin:0;">
+      Usar todo el banco
+      <input type="checkbox" id="allQuestions" name="all_questions" value="1">
+    </label>
+  </div>
+
+  <!-- NÚMERO -->
+  <div id="limitBlock">
+    <label>Número de preguntas</label>
+    <input type="number" id="limitInput" name="limit" value="20">
+  </div>
+
+  <!-- TIEMPO -->
+  <div>
+    <label>Tiempo (min)</label>
+    <input type="number" name="time_limit" value="30">
+  </div>
+
+  <button>Empezar sesión</button>
 
 </form>
 
-<!-- ========================= -->
-<!-- JS: CATEGORÍA → SUBCATEGORÍA -->
-<!-- ========================= -->
+</div>
+
 <script>
-  const categoryData = {
-    {% for c in categories %}
-      "{{ c.id }}": [
-        {% for s in c.subcategories %}
-          { id: "{{ s.id }}", name: "{{ s.name }}" },
-        {% endfor %}
-      ],
+/* ================= DATA ================= */
+const categoryData = {
+{% for c in categories %}
+  "{{ c.id }}": [
+    {% for s in c.subcategories %}
+      { id: "{{ s.id }}", name: "{{ s.name }}" },
     {% endfor %}
-  };
+  ],
+{% endfor %}
+};
 
-  const categorySelect = document.getElementById("categorySelect");
-  const subcategorySelect = document.getElementById("subcategorySelect");
+const categorySelect = document.getElementById("categorySelect");
+const subcategorySelect = document.getElementById("subcategorySelect");
+const searchInput = document.getElementById("subcategorySearch");
 
-  categorySelect.addEventListener("change", () => {
-    const categoryId = categorySelect.value;
+let currentSubcategories = [];
 
-    subcategorySelect.innerHTML =
-      '<option value="">-- Selecciona subcategoría --</option>';
+/* ================= CATEGORY ================= */
+categorySelect.addEventListener("change", () => {
+  const id = categorySelect.value;
 
-    if (!categoryId || !categoryData[categoryId]) return;
+  subcategorySelect.innerHTML =
+    '<option value="">Selecciona subcategoría</option>';
 
-    categoryData[categoryId].forEach(sub => {
-      const option = document.createElement("option");
-      option.value = sub.id;
-      option.textContent = sub.name;
-      subcategorySelect.appendChild(option);
-    });
+  currentSubcategories = categoryData[id] || [];
+
+  currentSubcategories.forEach(s => {
+    const o = document.createElement("option");
+    o.value = s.id;
+    o.textContent = s.name;
+    subcategorySelect.appendChild(o);
   });
+
+  searchInput.disabled = currentSubcategories.length === 0;
+  searchInput.placeholder = currentSubcategories.length
+    ? "Buscar subcategoría..."
+    : "Primero selecciona categoría";
+
+  searchInput.value = "";
+});
+
+/* ================= SEARCH ================= */
+searchInput.addEventListener("input", () => {
+  const query = searchInput.value.toLowerCase();
+
+  subcategorySelect.innerHTML =
+    '<option value="">Selecciona subcategoría</option>';
+
+  currentSubcategories
+    .filter(s => s.name.toLowerCase().includes(query))
+    .forEach(s => {
+      const o = document.createElement("option");
+      o.value = s.id;
+      o.textContent = s.name;
+      subcategorySelect.appendChild(o);
+    });
+});
+
+/* ================= ALL QUESTIONS ================= */
+const allQuestions = document.getElementById("allQuestions");
+const limitBlock = document.getElementById("limitBlock");
+
+allQuestions.addEventListener("change", () => {
+  limitBlock.classList.toggle("hidden", allQuestions.checked);
+});
 </script>
 
 </body>

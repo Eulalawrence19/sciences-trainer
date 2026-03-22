@@ -5,30 +5,52 @@
 <title>Entrenamiento</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- CodeMirror -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+
 <style>
+
 * { box-sizing:border-box; }
 
 body {
   font-family: monospace;
-  background:#0e0e0e;
   color:#eee;
   padding:12px;
   margin:0;
+
+  background:
+    linear-gradient(
+      rgba(26,25,25,0.25),
+      rgba(0,0,0,0.92)
+    ),
+    url("/static/img/Asa_Yoru.jpg");
+
+  background-size: cover;
+  background-position: center 28%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 nav a {
   color:#4fc3f7;
   text-decoration:none;
-  margin-right:12px;
+  margin-right:24px;
   display:inline-block;
   margin-bottom:6px;
 }
 
-h1, h2 { color:#ffd54f; }
+h1, h2 { color:#90caf9; }
 
 input, button {
-  background:#222;
-  color:#eee;
+  background:#111;
+  color:#c0c0c0;
   border:1px solid #555;
   font-family: monospace;
   padding:12px;
@@ -48,40 +70,66 @@ input[type="radio"] {
   margin-right:8px;
 }
 
-::placeholder { color:#888; }
-
 button { cursor:pointer; }
 
+::placeholder { color:#888; }
+
 .box {
-  margin-top:20px;
-  padding:15px;
-  border:1px solid #333;
-  max-width:700px;
+
+  margin-top:24px;
+  padding:18px;
+
+  max-width:900px;
+
   margin-left:auto;
   margin-right:auto;
+
+  background:
+    linear-gradient(
+      rgba(18,18,18,0.95),
+      rgba(12,12,12,0.95)
+    );
+
+  border-radius:12px;
+
+  border:1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03),
+    0 20px 60px rgba(0,0,0,0.85);
+
 }
 
 .progress {
+
   color:#aaa;
   font-size:14px;
   margin-bottom:10px;
   font-weight:bold;
+
 }
 
 .ok {
+
   color:#b9f6ca;
   background:#0f2f1f;
   border:1px solid #1b5e20;
-  padding:12px;
+  padding:14px;
   font-weight:bold;
+  border-radius:8px;
+  text-align:center;
+
 }
 
 .bad {
+
   color:#ff8a80;
-  background:#2a0f12;
+  background:#3b3b3b5e;
   border:1px solid #b71c1c;
-  padding:12px;
+  padding:14px;
   font-weight:bold;
+  border-radius:8px;
+
 }
 
 .bad b {
@@ -89,26 +137,68 @@ button { cursor:pointer; }
   font-size:18px;
 }
 
-@media (max-width:600px) {
-  h1 { font-size:22px; }
-  h2 { font-size:18px; }
+pre {
 
-  .ok, .bad {
-    font-size:18px;
-    text-align:center;
-    border-width:2px;
-  }
+  background:#0d1117;
+  padding:14px;
+  border-radius:10px;
+
+  overflow:auto;
+
+  white-space:pre;
+
+  line-height:1.45;
+  font-size:15px;
+
+  max-height:400px;
+
 }
+
+code {
+  font-family:monospace;
+  color:#e6edf3;
+}
+
+@media (max-width:600px){
+
+  body{
+    padding:6px;
+  }
+
+  .box{
+    max-width:100%;
+    padding:14px;
+  }
+
+  pre{
+    font-size:14px;
+  }
+
+}
+
 </style>
 
+<!-- MathJax -->
+
+<script>
+MathJax = {
+  tex:{
+    inlineMath:[['$','$'],['\\(','\\)']],
+    displayMath:[['\\[','\\]']],
+    processEscapes:true
+  }
+}
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
 </head>
 
 <body>
 
 <nav>
-  <a href="/">Inicio</a>
-  <a href="/admin">Admin</a>
+<a href="/">Inicio</a>
+<a href="/admin">Admin</a>
 </nav>
 
 <hr>
@@ -117,128 +207,250 @@ button { cursor:pointer; }
 
 {% if result %}
 <div class="box">
-  {% if result.correct %}
-    <p class="ok">✔ CORRECTO</p>
-  {% else %}
-    <p class="bad">✘ INCORRECTO</p>
-    <p class="bad">
-      RESPUESTA CORRECTA:
-      <b>{{ result.expected }}</b>
-    </p>
-  {% endif %}
+
+{% if result.correct %}
+
+<p class="ok">✔ CORRECTO</p>
+
+{% else %}
+
+<p class="bad">✘ INCORRECTO</p>
+
+<p class="bad">
+RESPUESTA CORRECTA:
+
+<pre><code>{{ result.expected }}</code></pre>
+
+</p>
+
+{% endif %}
+
 </div>
 {% endif %}
 
 {% if question %}
+
 <div class="box">
 
-  {% if progress %}
-    <div class="progress">
-      Pregunta {{ progress.current }} / {{ progress.total }}
-    </div>
-  {% endif %}
+{% if progress %}
 
-  {% if remaining_time is defined %}
-    <div class="progress" id="timer"></div>
-  {% endif %}
+<div class="progress">
+Pregunta {{ progress.current }} / {{ progress.total }}
+</div>
 
-  <h2>Pregunta</h2>
+{% endif %}
 
-  <div id="question">
-    \[
-    {{ question.statement }}
-    \]
-  </div>
+{% if remaining_time is defined %}
 
-  <form method="post" action="/play/answer">
-    <input type="hidden" name="question_id" value="{{ question.id }}">
-    <input type="hidden" name="subcategory_id" value="{{ subcategory_id }}">
+<div class="progress" id="timer"></div>
 
-    {% if question.options and question.options|length > 0 %}
+{% endif %}
 
-      {% for o in question.options %}
-        <label>
-          <input
-            type="radio"
-            name="user_answer"
-            value="{{ o.id }}"
-            required
-          >
-          {{ o.text }}
-        </label>
-      {% endfor %}
+<h2>Pregunta</h2>
 
-    {% else %}
+<div id="question">
 
-      <input
-        name="user_answer"
-        autofocus
-        placeholder="Tu respuesta"
-        required
-      >
+{% if question.statement_text %}
+<div class="question-text">
+{{ question.statement_text | safe }}
+</div>
+{% endif %}
 
-    {% endif %}
-
-    <button>Responder</button>
-  </form>
+{% if question.statement_math %}
+\[
+{{ question.statement_math | safe }}
+\]
+{% endif %}
 
 </div>
+
+<form method="post" action="/play/answer">
+
+<input type="hidden" name="question_id" value="{{ question.id }}">
+<input type="hidden" name="subcategory_id" value="{{ subcategory_id }}">
+<input type="hidden" name="eval_type" value="{{ question.eval_type }}">
+
+{% if question.eval_type == "CHOICE" %}
+
+{% for o in question.options %}
+
+<label>
+
+<input
+type="radio"
+name="user_answer"
+value="{{ o.id }}"
+required
+>
+
+{{ o.text }}
+
+</label>
+
+{% endfor %}
+
+{% elif question.eval_type == "SYNTAX" %}
+
+<textarea
+id="editor"
+name="user_answer"
+rows="10"
+spellcheck="false"
+></textarea>
+
+{% else %}
+
+<input
+name="user_answer"
+autocomplete="off"
+spellcheck="false"
+placeholder="Tu respuesta"
+required
+>
+
+{% endif %}
+
+<button>Responder</button>
+
+</form>
+
+</div>
+
 {% endif %}
 
 {% if summary %}
-<div class="box">
-  <h2>Resumen</h2>
-  <ul>
-    <li>Preguntas: {{ summary.attempts }}</li>
-    <li>Aciertos: {{ summary.correct }}</li>
-    <li>Errores: {{ summary.attempts - summary.correct }}</li>
-    <li>
-      Precisión:
-      {% if summary.attempts > 0 %}
-        {{ (summary.correct / summary.attempts * 100) | round(2) }}%
-      {% else %}
-        0%
-      {% endif %}
-    </li>
-  </ul>
 
-  <form method="get" action="/">
-    <button>Volver al inicio</button>
-  </form>
-</div>
+<div class="box">
+
+<h2>Resumen</h2>
+
+<ul>
+
+<li>Preguntas: {{ summary.attempts }}</li>
+<li>Aciertos: {{ summary.correct }}</li>
+<li>Errores: {{ summary.attempts - summary.correct }}</li>
+
+<li>
+
+Precisión:
+
+{% if summary.attempts > 0 %}
+
+{{ (summary.correct / summary.attempts * 100) | round(2) }}%
+
+{% else %}
+
+0%
+
 {% endif %}
 
+</li>
+
+</ul>
+
+<form method="get" action="/">
+<button>Volver al inicio</button>
+</form>
+
+</div>
+
+{% endif %}
+
+<!-- CodeMirror Init -->
+
 <script>
-MathJax.typesetPromise();
+
+document.addEventListener("DOMContentLoaded", function(){
+
+const textarea = document.getElementById("editor")
+
+if(!textarea) return
+
+const editor = CodeMirror.fromTextArea(textarea,{
+
+mode:"python",
+theme:"dracula",
+
+lineNumbers:true,
+
+indentUnit:4,
+tabSize:4,
+
+indentWithTabs:false
+
+})
+
+const form = textarea.closest("form")
+
+form.addEventListener("submit", function(e){
+
+editor.save()
+
+if(!textarea.value.trim()){
+
+e.preventDefault()
+
+alert("Debes escribir código antes de responder.")
+
+}
+
+})
+
+})
+
 </script>
 
+<!-- MathJax render -->
+
+{% if question and question.statement_math %}
+
 <script>
-{% if remaining_time is defined and question %}
-let remaining = {{ remaining_time }};
-const timer = document.getElementById("timer");
 
-const interval = setInterval(() => {
-  remaining--;
+document.addEventListener("DOMContentLoaded",()=>{
+MathJax.typesetPromise()
+})
 
-  if (remaining <= 0) {
-    clearInterval(interval);
-    fetch("/play/timeout", { method: "POST" })
-      .then(r => r.text())
-      .then(html => document.documentElement.innerHTML = html);
-    return;
-  }
+</script>
 
-  const m = Math.floor(remaining / 60);
-  const s = remaining % 60;
-
-  if (remaining < 10) timer.style.color = "#ff5252";
-  else if (remaining < 30) timer.style.color = "#ff9100";
-  else timer.style.color = "#aaa";
-
-  timer.textContent =
-    "Tiempo restante: " + m + ":" + s.toString().padStart(2,"0");
-}, 1000);
 {% endif %}
+
+<!-- Timer -->
+
+<script>
+
+{% if remaining_time is defined and question %}
+
+let remaining = {{ remaining_time }}
+
+const timer = document.getElementById("timer")
+
+const interval = setInterval(()=>{
+
+remaining--
+
+if(remaining<=0){
+
+clearInterval(interval)
+
+fetch("/play/timeout",{method:"POST"})
+.then(r=>r.text())
+.then(html=>document.documentElement.innerHTML=html)
+
+return
+
+}
+
+const m=Math.floor(remaining/60)
+const s=remaining%60
+
+timer.textContent=
+"Tiempo restante: "+m+":"+
+s.toString().padStart(2,"0")
+
+},1000)
+
+{% endif %}
+
 </script>
 
 </body>

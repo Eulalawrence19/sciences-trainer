@@ -1,3 +1,6 @@
+# app/crud.py
+
+import random
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import func
 from sqlalchemy.exc import IntegrityError
@@ -21,7 +24,7 @@ def _get_db() -> Session:
 def get_categories():
     """
     Devuelve todas las categorías con subcategorías,
-    preguntas y opciones (eager loading para admin)
+    preguntas y opciones (eager loading para admin).
     """
     db = _get_db()
     try:
@@ -46,6 +49,7 @@ def create_category(name: str):
         db.commit()
     except IntegrityError:
         db.rollback()
+        raise
     finally:
         db.close()
 
@@ -105,11 +109,7 @@ def create_subcategory(category_id: int, name: str):
 def update_subcategory(subcategory_id: int, new_name: str) -> bool:
     db = _get_db()
     try:
-        sub = (
-            db.query(Subcategory)
-            .filter(Subcategory.id == subcategory_id)
-            .first()
-        )
+        sub = db.query(Subcategory).filter(Subcategory.id == subcategory_id).first()
         if not sub:
             return False
         sub.name = new_name
@@ -122,11 +122,7 @@ def update_subcategory(subcategory_id: int, new_name: str) -> bool:
 def delete_subcategory(subcategory_id: int) -> bool:
     db = _get_db()
     try:
-        sub = (
-            db.query(Subcategory)
-            .filter(Subcategory.id == subcategory_id)
-            .first()
-        )
+        sub = db.query(Subcategory).filter(Subcategory.id == subcategory_id).first()
         if not sub:
             return False
         db.delete(sub)
@@ -140,13 +136,28 @@ def delete_subcategory(subcategory_id: int) -> bool:
 # QUESTION
 # =====================================================
 
-def create_question(subcategory_id: int, statement: str, answer: str):
+def create_question(
+    *,
+    subcategory_id: int,
+    statement_text: str | None,
+    statement_math: str | None,
+    eval_type: str,
+    answer: str | None,
+    tolerance: float | None,
+) -> int:
+    """
+    Crea una pregunta YA INTERPRETADA.
+    La validación semántica vive en la capa de servicio o en la DB.
+    """
     db = _get_db()
     try:
         q = Question(
             subcategory_id=subcategory_id,
-            statement=statement,
-            answer=answer
+            statement_text=statement_text,
+            statement_math=statement_math,
+            eval_type=eval_type,
+            answer=answer,
+            tolerance=tolerance,
         )
         db.add(q)
         db.commit()
@@ -169,17 +180,24 @@ def get_question(question_id: int):
 
 
 def update_question(
+    *,
     question_id: int,
-    new_statement: str,
-    new_answer: str
+    statement_text: str | None,
+    statement_math: str | None,
+    answer: str | None,
+    tolerance: float | None,
 ) -> bool:
     db = _get_db()
     try:
         q = db.query(Question).filter(Question.id == question_id).first()
         if not q:
             return False
-        q.statement = new_statement
-        q.answer = new_answer
+
+        q.statement_text = statement_text
+        q.statement_math = statement_math
+        q.answer = answer
+        q.tolerance = tolerance
+
         db.commit()
         return True
     finally:
@@ -199,37 +217,22 @@ def delete_question(question_id: int) -> bool:
         db.close()
 
 
-def get_random_questions(subcategory_id: int, limit: int | None = None):
-    """
-    Devuelve preguntas aleatorias SIN REPETICIÓN
-    (incluye opciones si existen)
-    """
-    db = _get_db()
-    try:
-        query = (
-            db.query(Question)
-            .options(joinedload(Question.options))
-            .filter(Question.subcategory_id == subcategory_id)
-            .order_by(func.random())
-        )
-        if limit is not None:
-            query = query.limit(limit)
-        return query.all()
-    finally:
-        db.close()
-
-
 # =====================================================
-# OPTIONS / ALTERNATIVAS
+# OPTIONS
 # =====================================================
 
-def create_option(question_id: int, text: str, is_correct: bool = False):
+def create_option(
+    *,
+    question_id: int,
+    text: str,
+    is_correct: bool = False,
+) -> int:
     db = _get_db()
     try:
         opt = Option(
             question_id=question_id,
             text=text,
-            is_correct=is_correct
+            is_correct=is_correct,
         )
         db.add(opt)
         db.commit()
@@ -238,14 +241,57 @@ def create_option(question_id: int, text: str, is_correct: bool = False):
         db.close()
 
 
-def get_options(question_id: int):
+def update_option(
+    *,
+    option_id: int,
+    text: str,
+    is_correct: bool,
+) -> bool:
     db = _get_db()
     try:
-        return (
+        opt = db.query(Option).filter(Option.id == option_id).first()
+        if not opt:
+            return False
+
+        opt.text = text
+        opt.is_correct = is_correct
+        db.commit()
+        return True
+    finally:
+        db.close()
+
+
+def set_correct_option(
+    *,
+    question_id: int,
+    option_id: int,
+) -> bool:
+    db = _get_db()
+    try:
+        options = (
             db.query(Option)
             .filter(Option.question_id == question_id)
             .all()
         )
+        if not options:
+            return False
+
+        for o in options:
+            o.is_correct = (o.id == option_id)
+
+        db.commit()
+        return True
+    finally:
+        db.close()
+
+
+def delete_options_by_question(question_id: int):
+    db = _get_db()
+    try:
+        db.query(Option).filter(
+            Option.question_id == question_id
+        ).delete()
+        db.commit()
     finally:
         db.close()
 
@@ -259,5 +305,47 @@ def delete_option(option_id: int) -> bool:
         db.delete(opt)
         db.commit()
         return True
+    finally:
+        db.close()
+
+
+# =====================================================
+# PLAY (SELECCIÓN DE PREGUNTAS)
+# =====================================================
+
+def get_playable_questions(subcategory_id: int, limit: int | None = None):
+    """
+    Devuelve SOLO preguntas jugables:
+    - TEXT / EQUATION / NUMERIC → siempre válidas
+    - CHOICE → ≥2 opciones y exactamente 1 correcta
+
+    El orden es aleatorio REAL.
+    """
+    db = _get_db()
+    try:
+        questions = (
+            db.query(Question)
+            .options(joinedload(Question.options))
+            .filter(Question.subcategory_id == subcategory_id)
+            .all()
+        )
+
+        playable: list[Question] = []
+
+        for q in questions:
+            if q.eval_type == "CHOICE":
+                options = q.options or []
+                correct = [o for o in options if o.is_correct]
+                if len(options) < 2 or len(correct) != 1:
+                    continue
+            playable.append(q)
+
+        # Aleatoriedad REAL
+        random.shuffle(playable)
+
+        if limit is not None:
+            playable = playable[:limit]
+
+        return playable
     finally:
         db.close()
