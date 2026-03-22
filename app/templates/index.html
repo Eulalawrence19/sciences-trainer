@@ -220,15 +220,7 @@ button:hover {
 
 <script>
 /* ================= DATA ================= */
-const categoryData = {
-{% for c in categories %}
-  "{{ c.id }}": [
-    {% for s in c.subcategories %}
-      { id: "{{ s.id }}", name: "{{ s.name }}" },
-    {% endfor %}
-  ],
-{% endfor %}
-};
+const categoryData = {{ categories_json | safe }};
 
 const categorySelect = document.getElementById("categorySelect");
 const subcategorySelect = document.getElementById("subcategorySelect");

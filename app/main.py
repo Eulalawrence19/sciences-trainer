@@ -8,6 +8,7 @@ from fastapi import UploadFile, File
 import csv
 import io
 import re
+import json
 from fastapi import UploadFile, File
 from fastapi.responses import RedirectResponse
 
@@ -104,7 +105,10 @@ def index(request: Request):
 
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "categories": categories},
+        {
+            "request": request, 
+            "categories": categories,
+            "categories_json": json.dumps(categories)},
     )
 # =====================================================
 # ADMIN
