@@ -76,8 +76,7 @@ button.danger { background:#7f0000; }
 <form data-ajax action="/admin/subcategory" autocomplete="off">
 
 <select name="category_id" required>
-{% for c in categories %}
-  <option value="{{ c.id }}">[{{ c.id }}] {{ c.name }}</option>
+{% for c in categories_admin %}  <option value="{{ c.id }}">[{{ c.id }}] {{ c.name }}</option>
 {% endfor %}
 </select>
 
@@ -105,8 +104,7 @@ button.danger { background:#7f0000; }
 
 <select name="subcategory_id" required>
 
-{% for c in categories %}
-  <optgroup label="[{{ c.id }}] {{ c.name }}">
+{% for c in categories_admin %}  <optgroup label="[{{ c.id }}] {{ c.name }}">
     {% for s in c.subcategories %}
       <option value="{{ s.id }}">[{{ s.id }}] {{ s.name }}</option>
     {% endfor %}
@@ -159,7 +157,7 @@ button.danger { background:#7f0000; }
 
 <select name="question_id" required>
 
-{% for c in categories %}
+{% for c in categories_admin %}
 {% for s in c.subcategories %}
 {% for q in s.questions if q.eval_type == "CHOICE" %}
   <option value="{{ q.id }}">
@@ -247,8 +245,7 @@ T: 0.001
 
 <select name="subcategory_id" required>
 
-{% for c in categories %}
-  <optgroup label="{{ c.name }}">
+{% for c in categories_admin %}  <optgroup label="{{ c.name }}">
     {% for s in c.subcategories %}
       <option value="{{ s.id }}">[{{ s.id }}] {{ s.name }}</option>
     {% endfor %}
@@ -279,8 +276,7 @@ T: 0.001
 
 <select name="category_id" required>
 
-{% for c in categories %}
-  <option value="{{ c.id }}">[{{ c.id }}] {{ c.name }}</option>
+{% for c in categories_admin %}  <option value="{{ c.id }}">[{{ c.id }}] {{ c.name }}</option>
 {% endfor %}
 
 </select>
@@ -297,8 +293,7 @@ T: 0.001
 
 <select name="subcategory_id" required>
 
-{% for c in categories %}
-{% for s in c.subcategories %}
+{% for c in categories_admin %}{% for s in c.subcategories %}
   <option value="{{ s.id }}">
     [{{ s.id }}] {{ c.name }} / {{ s.name }}
   </option>
@@ -319,8 +314,7 @@ T: 0.001
 
 <select name="question_id" required>
 
-{% for c in categories %}
-{% for s in c.subcategories %}
+{% for c in categories_admin %}{% for s in c.subcategories %}
 {% for q in s.questions %}
   <option value="{{ q.id }}">
     [{{ q.id }}] {{ c.name }} / {{ s.name }} → {{ (q.statement_text or q.statement_math)[:40] }}
@@ -343,8 +337,7 @@ T: 0.001
 
 <select name="option_id" required>
 
-{% for c in categories %}
-{% for s in c.subcategories %}
+{% for c in categories_admin %}{% for s in c.subcategories %}
 {% for q in s.questions if q.eval_type == "CHOICE" %}
 {% for o in q.options %}
   <option value="{{ o.id }}">

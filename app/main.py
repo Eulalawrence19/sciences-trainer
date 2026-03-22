@@ -132,7 +132,7 @@ def admin_home(request: Request):
 
     return templates.TemplateResponse(
         "admin.html",
-        {"request": request, "categories": categories},
+        {"request": request, "categories_admin": categories},
     )
 # ---------- CATEGORY ----------
 
