@@ -8,6 +8,7 @@ from fastapi import UploadFile, File
 import csv
 import io
 import re
+import os
 from fastapi import UploadFile, File
 from fastapi.responses import RedirectResponse
 
@@ -39,7 +40,12 @@ from app.crud import (
 
 app = FastAPI(title="Sciences Trainer")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+templates = Jinja2Templates(
+    directory=os.path.join(BASE_DIR, "templates")
+)
 
 # =====================================================
 # SESIÓN (single-user, simple)
@@ -61,7 +67,23 @@ def startup():
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    categories = get_categories()
+    categories_db = get_categories()
+
+    categories = [
+        {
+            "id": c.id,
+            "name": c.name,
+            "subcategories": [
+                {
+                    "id": s.id,
+                    "name": s.name
+                }
+                for s in c.subcategories
+            ]
+        }
+        for c in categories_db
+    ]
+
     return templates.TemplateResponse(
         "index.html",
         {"request": request, "categories": categories},
@@ -73,12 +95,24 @@ def index(request: Request):
 
 @app.get("/admin", response_class=HTMLResponse)
 def admin_home(request: Request):
-    categories = get_categories()
+    categories_db = get_categories()
+
+    categories = [
+        {
+            "id": c.id,
+            "name": c.name,
+            "subcategories": [
+                {"id": s.id, "name": s.name}
+                for s in c.subcategories
+            ]
+        }
+        for c in categories_db
+    ]
+
     return templates.TemplateResponse(
         "admin.html",
         {"request": request, "categories": categories},
     )
-
 # ---------- CATEGORY ----------
 
 @app.post("/admin/category")
